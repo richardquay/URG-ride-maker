@@ -1,0 +1,21 @@
+{
+  "name": "urg-ridemaker-discord-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for URG RideMaker with Firestore database integration",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "firebase-admin": "^12.0.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["discord", "bot", "firestore", "database"],
+  "author": "URG RideMaker",
+  "license": "MIT"
+} 
