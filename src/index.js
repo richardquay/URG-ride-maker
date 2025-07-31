@@ -1,6 +1,7 @@
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
+const http = require('http');
 require('dotenv').config();
 
 // Import Firebase configuration
@@ -34,6 +35,23 @@ for (const file of commandFiles) {
     console.log(`⚠️ The command at ${filePath} is missing a required "data" or "execute" property.`);
   }
 }
+
+// Create HTTP server for Railway health checks
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ 
+    status: 'Discord bot is running!',
+    botReady: client.user ? true : false,
+    user: client.user ? client.user.tag : 'Not logged in',
+    timestamp: new Date().toISOString()
+  }));
+});
+
+// Start HTTP server
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🌐 HTTP server listening on port ${PORT}`);
+});
 
 // When the client is ready, run this code (only once)
 client.once(Events.ClientReady, async () => {
