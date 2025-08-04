@@ -2,6 +2,59 @@ const { EmbedBuilder } = require('discord.js');
 
 // Helper utility functions for the ride bot
 
+// Location data with names and URLs
+const LOCATIONS = {
+  'angry-catfish': {
+    name: 'Angry Catfish',
+    url: 'https://maps.app.goo.gl/rrxhyZeaJR5UxfKp6'
+  },
+  'northern-coffeeworks': {
+    name: 'Northern Coffeeworks',
+    url: 'https://maps.app.goo.gl/YjYhaHCDZkeggseT9'
+  },
+  'venn-brewery': {
+    name: 'Venn Brewery',
+    url: 'https://maps.app.goo.gl/L3qNdfBptyKAZuam8'
+  },
+  'bull-horns': {
+    name: 'Bull Horns',
+    url: 'https://maps.app.goo.gl/ZW5c6xZdnPK3URpR8'
+  }
+};
+
+// Get default starting location based on time of day
+function getDefaultStartingLocation(hours) {
+  // Before noon (12 PM) = Northern Coffeeworks, after noon = Angry Catfish
+  return hours < 12 ? 'northern-coffeeworks' : 'angry-catfish';
+}
+
+// Validate location
+function validateLocation(location) {
+  if (typeof location === 'string' && location.trim()) {
+    // If it's a predefined location, validate it
+    if (LOCATIONS[location]) {
+      return location;
+    }
+    // If it's a custom location, return as is
+    return location.trim();
+  }
+  throw new Error('Invalid location provided');
+}
+
+// Format location for display
+function formatLocation(location) {
+  if (!location) return null;
+  
+  // Check if it's a predefined location
+  if (LOCATIONS[location]) {
+    const loc = LOCATIONS[location];
+    return `[${loc.name}](${loc.url})`;
+  }
+  
+  // Return custom location as is
+  return location;
+}
+
 // Parse date string (MM/DD format for MVP)
 function parseDate(dateString) {
   const today = new Date();
@@ -130,7 +183,7 @@ function validateRouteUrl(url) {
 }
 
 // Format ride post message
-function formatRidePost(ride) {
+function formatRidePost(ride, action = 'created') {
   const meetTime = formatTime(ride.meetTime.hours, ride.meetTime.minutes);
   const rollTime = new Date(ride.date);
   rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + ride.rollTime);
@@ -142,32 +195,40 @@ function formatRidePost(ride) {
   
   // Create embed
   const embed = new EmbedBuilder()
-    .setTitle(`🚴‍♂️ ${ride.type.toUpperCase()} RIDE 🚴‍♀️`)
+    .setTitle(`${ride.type.toUpperCase()} RIDE`)
     .setColor(getRideColor(ride.type))
-    .setTimestamp()
-    .setFooter({ text: 'URG RideMaker' });
+    .setFooter({ text: `URG RideMaker • ${action}` });
 
-  // Add description
-  let description = `📅 **Date**: ${ride.date.toLocaleDateString()}\n`;
-  description += `⏰ **Meet**: ${meetTime} | **Roll**: ${rollTimeFormatted}\n`;
-  description += `🏃 **Pace**: ${paceText}\n`;
-  description += `🚫 **Drop Policy**: ${ride.dropPolicy}\n`;
+  // Add description with smaller icons and proper spacing
+  let description = `**Date**: ${ride.date.toLocaleDateString()}\n`;
+  description += `**Meet**: ${meetTime} | **Roll**: ${rollTimeFormatted}\n`;
+  description += `**Pace**: ${paceText}\n`;
+  description += `**Drop Policy**: ${ride.dropPolicy}\n`;
+  
+  // Add starting and end locations
+  if (ride.startingLocation) {
+    const formattedStart = formatLocation(ride.startingLocation);
+    description += `**Start**: ${formattedStart}\n`;
+  }
+  
+  if (ride.endLocation) {
+    const formattedEnd = formatLocation(ride.endLocation);
+    description += `**End**: ${formattedEnd}\n`;
+  }
   
   if (ride.mileage) {
-    description += `📏 **Distance**: ${ride.mileage} miles\n`;
+    description += `**Distance**: ${ride.mileage} miles\n`;
   }
   
   if (ride.route) {
-    description += `🗺️ **Route**: ${ride.route}\n`;
+    description += `**Route**: ${ride.route}\n`;
   }
   
-  description += `👑 **Lead**: <@${ride.leader.id}>`;
+  description += `**Lead**: <@${ride.leader.id}>`;
   
   if (ride.sweep) {
-    description += `\n🧹 **Sweep**: <@${ride.sweep.id}>`;
+    description += `\n**Sweep**: <@${ride.sweep.id}>`;
   }
-  
-  description += '\n\n**React below to join!**';
   
   embed.setDescription(description);
   
@@ -189,8 +250,7 @@ function getRideColor(type) {
 function getReactionEmoji(attendeeType) {
   const emojis = {
     going: '🚴‍♂️',
-    maybe: '🤔',
-    weather: '🌧️'
+    maybe: '🤔'
   };
   return emojis[attendeeType] || '❓';
 }
@@ -232,5 +292,9 @@ module.exports = {
   getReactionEmoji,
   validateRideType,
   validatePace,
-  validateDropPolicy
+  validateDropPolicy,
+  getDefaultStartingLocation,
+  validateLocation,
+  formatLocation,
+  LOCATIONS
 }; 

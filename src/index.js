@@ -91,31 +91,56 @@ client.once(Events.ClientReady, async () => {
   }
 });
 
-// Handle slash command interactions
+// Handle interactions
 client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
+  // Handle slash commands
+  if (interaction.isChatInputCommand()) {
+    const command = interaction.client.commands.get(interaction.commandName);
 
-  const command = interaction.client.commands.get(interaction.commandName);
+    if (!command) {
+      console.error(`No command matching ${interaction.commandName} was found.`);
+      return;
+    }
 
-  if (!command) {
-    console.error(`No command matching ${interaction.commandName} was found.`);
-    return;
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ 
+          content: 'There was an error while executing this command!', 
+          ephemeral: true 
+        });
+      } else {
+        await interaction.reply({ 
+          content: 'There was an error while executing this command!', 
+          ephemeral: true 
+        });
+      }
+    }
   }
-
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ 
-        content: 'There was an error while executing this command!', 
-        ephemeral: true 
-      });
-    } else {
-      await interaction.reply({ 
-        content: 'There was an error while executing this command!', 
-        ephemeral: true 
-      });
+  
+  // Handle modal submissions
+  if (interaction.isModalSubmit()) {
+    const event = interaction.client.events.get(Events.ModalSubmit);
+    
+    if (event) {
+      try {
+        await event.execute(interaction);
+      } catch (error) {
+        console.error('Error handling modal submission:', error);
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({ 
+            content: 'There was an error while processing your input!', 
+            ephemeral: true 
+          });
+        } else {
+          await interaction.reply({ 
+            content: 'There was an error while processing your input!', 
+            ephemeral: true 
+          });
+        }
+      }
     }
   }
 });
