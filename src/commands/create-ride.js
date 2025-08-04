@@ -39,17 +39,25 @@ module.exports = {
         .setDescription('Ride date (MM/DD, Today, or Tomorrow)')
         .setRequired(true))
     .addStringOption(option =>
-      option.setName('meet-time')
-        .setDescription('Meet time (HH:MM or HH:MM AM/PM)')
+      option.setName('start-time')
+        .setDescription('Start time (HH:MM or HH:MM AM/PM)')
         .setRequired(true))
+    .addStringOption(option =>
+      option.setName('drop')
+        .setDescription('Drop policy')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Drop', value: 'drop' },
+          { name: 'No Drop', value: 'no-drop' }
+        ))
     .addStringOption(option =>
       option.setName('mileage')
         .setDescription('Distance in miles (or km)')
-        .setRequired(true))
+        .setRequired(false))
     .addStringOption(option =>
       option.setName('route')
         .setDescription('Strava or RideWithGPS route URL')
-        .setRequired(true))
+        .setRequired(false))
     .addIntegerOption(option =>
       option.setName('avg-speed')
         .setDescription('Average speed in MPH (required for Spicy pace)')
@@ -66,15 +74,7 @@ module.exports = {
     .addUserOption(option =>
       option.setName('sweep')
         .setDescription('Sweep rider')
-        .setRequired(false))
-    .addStringOption(option =>
-      option.setName('drop-policy')
-        .setDescription('Drop policy (auto-set for Party pace)')
-        .setRequired(false)
-        .addChoices(
-          { name: 'Drop', value: 'drop' },
-          { name: 'No Drop', value: 'no-drop' }
-        )),
+        .setRequired(false)),
 
   async execute(interaction) {
     try {
@@ -105,14 +105,14 @@ module.exports = {
       // Parse and validate all inputs
       const pace = validatePace(interaction.options.getString('pace'));
       const dateString = interaction.options.getString('date');
-      const meetTimeString = interaction.options.getString('meet-time');
+      const startTimeString = interaction.options.getString('start-time');
+      const dropPolicy = validateDropPolicy(interaction.options.getString('drop'));
+      
       const mileageString = interaction.options.getString('mileage');
       const routeUrl = interaction.options.getString('route');
-      
       const avgSpeed = interaction.options.getInteger('avg-speed');
       const rollTime = interaction.options.getInteger('roll-time') || 15; // Default 15 minutes
       const sweepUser = interaction.options.getUser('sweep');
-      const dropPolicyOption = interaction.options.getString('drop-policy');
 
       // Validate required avg-speed for Spicy pace
       if (pace === 'spicy' && !avgSpeed) {
@@ -123,19 +123,21 @@ module.exports = {
         return;
       }
 
-      // Auto-set drop policy based on pace
-      let dropPolicy;
-      if (pace === 'party') {
-        dropPolicy = 'no-drop';
-      } else if (pace === 'spicy') {
-        dropPolicy = dropPolicyOption || 'drop';
-      }
-
       // Parse inputs
       const date = parseDate(dateString);
-      const meetTime = parseTime(meetTimeString);
-      const mileage = parseMileage(mileageString);
-      const route = validateRouteUrl(routeUrl);
+      const startTime = parseTime(startTimeString);
+      
+      // Parse optional inputs
+      let mileage = null;
+      let route = null;
+      
+      if (mileageString) {
+        mileage = parseMileage(mileageString);
+      }
+      
+      if (routeUrl) {
+        route = validateRouteUrl(routeUrl);
+      }
 
       // Create ride data
       const rideData = {
@@ -144,7 +146,7 @@ module.exports = {
         type: rideType,
         pace,
         date,
-        meetTime,
+        meetTime: startTime, // Keep the field name consistent
         mileage,
         route,
         avgSpeed: avgSpeed || null,
@@ -199,7 +201,7 @@ module.exports = {
       if (error.message.includes('Invalid date format')) {
         errorMessage = '❌ Invalid date format. Use MM/DD, "Today", or "Tomorrow".';
       } else if (error.message.includes('Invalid time format')) {
-        errorMessage = '❌ Invalid time format. Use HH:MM or HH:MM AM/PM.';
+        errorMessage = '❌ Invalid time format. Use HH:MM, HH:MM AM/PM, or lazy formats like "6pm".';
       } else if (error.message.includes('Mileage must be')) {
         errorMessage = '❌ Invalid mileage. Please provide a positive number.';
       } else if (error.message.includes('Route must be')) {
@@ -208,12 +210,22 @@ module.exports = {
         errorMessage = '❌ Invalid ride type.';
       } else if (error.message.includes('Invalid pace')) {
         errorMessage = '❌ Invalid pace.';
+      } else if (error.message.includes('Invalid drop policy')) {
+        errorMessage = '❌ Invalid drop policy.';
       }
 
-      await interaction.reply({
-        content: errorMessage,
-        ephemeral: true
-      });
+      // Check if we've already replied to avoid the "already acknowledged" error
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: errorMessage,
+          ephemeral: true
+        });
+      } else {
+        await interaction.followUp({
+          content: errorMessage,
+          ephemeral: true
+        });
+      }
     }
   },
 }; 

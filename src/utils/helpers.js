@@ -38,13 +38,37 @@ function parseDate(dateString) {
   throw new Error('Invalid date format. Use MM/DD, "Today", or "Tomorrow"');
 }
 
-// Parse time string (HH:MM format, 12 or 24 hour)
+// Parse time string (HH:MM format, 12 or 24 hour, or lazy formats like "6pm")
 function parseTime(timeString) {
+  // Handle lazy formats like "6pm", "9am", "12pm"
+  const lazyTimeRegex = /^(\d{1,2})(am|pm)$/i;
+  const lazyMatch = timeString.match(lazyTimeRegex);
+  
+  if (lazyMatch) {
+    let hours = parseInt(lazyMatch[1]);
+    const period = lazyMatch[2].toLowerCase();
+    
+    // Handle 12-hour format
+    if (period === 'pm' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'am' && hours === 12) {
+      hours = 0;
+    }
+    
+    // Validate hours
+    if (hours < 0 || hours > 23) {
+      throw new Error('Invalid time. Hours must be 1-12');
+    }
+    
+    return { hours, minutes: 0 };
+  }
+  
+  // Handle standard formats like "6:30pm", "14:30"
   const timeRegex = /^(\d{1,2}):(\d{2})(\s*(am|pm))?$/i;
   const match = timeString.match(timeRegex);
   
   if (!match) {
-    throw new Error('Invalid time format. Use HH:MM or HH:MM AM/PM');
+    throw new Error('Invalid time format. Use HH:MM, HH:MM AM/PM, or lazy formats like "6pm"');
   }
   
   let hours = parseInt(match[1]);

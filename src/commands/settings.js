@@ -122,10 +122,19 @@ module.exports = {
 
     } catch (error) {
       console.error('Error in settings command:', error);
-      await interaction.reply({
-        content: '❌ An error occurred while updating settings. Please try again.',
-        ephemeral: true
-      });
+      
+      // Check if we've already replied to avoid the "already acknowledged" error
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: '❌ An error occurred while updating settings. Please try again.',
+          ephemeral: true
+        });
+      } else {
+        await interaction.followUp({
+          content: '❌ An error occurred while updating settings. Please try again.',
+          ephemeral: true
+        });
+      }
     }
   },
 }; 
