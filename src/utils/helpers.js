@@ -1,3 +1,5 @@
+const { EmbedBuilder } = require('discord.js');
+
 // Helper utility functions for the ride bot
 
 // Parse date string (MM/DD format for MVP)
@@ -138,18 +140,49 @@ function formatRidePost(ride) {
     ? `${ride.pace} (${ride.avgSpeed} mph)`
     : ride.pace;
   
-  const sweepText = ride.sweep ? `\n🧹 **Sweep**: <@${ride.sweep.id}>` : '';
-  
-  return `🚴‍♂️ **${ride.type.toUpperCase()} RIDE** 🚴‍♀️
-📅 **Date**: ${ride.date.toLocaleDateString()}
-⏰ **Meet**: ${meetTime} | **Roll**: ${rollTimeFormatted}
-🏃 **Pace**: ${paceText}
-🚫 **Drop Policy**: ${ride.dropPolicy}
-📏 **Distance**: ${ride.mileage} miles
-🗺️ **Route**: ${ride.route}
-👑 **Lead**: <@${ride.leader.id}>${sweepText}
+  // Create embed
+  const embed = new EmbedBuilder()
+    .setTitle(`🚴‍♂️ ${ride.type.toUpperCase()} RIDE 🚴‍♀️`)
+    .setColor(getRideColor(ride.type))
+    .setTimestamp()
+    .setFooter({ text: 'URG RideMaker' });
 
-React below to join!`;
+  // Add description
+  let description = `📅 **Date**: ${ride.date.toLocaleDateString()}\n`;
+  description += `⏰ **Meet**: ${meetTime} | **Roll**: ${rollTimeFormatted}\n`;
+  description += `🏃 **Pace**: ${paceText}\n`;
+  description += `🚫 **Drop Policy**: ${ride.dropPolicy}\n`;
+  
+  if (ride.mileage) {
+    description += `📏 **Distance**: ${ride.mileage} miles\n`;
+  }
+  
+  if (ride.route) {
+    description += `🗺️ **Route**: ${ride.route}\n`;
+  }
+  
+  description += `👑 **Lead**: <@${ride.leader.id}>`;
+  
+  if (ride.sweep) {
+    description += `\n🧹 **Sweep**: <@${ride.sweep.id}>`;
+  }
+  
+  description += '\n\n**React below to join!**';
+  
+  embed.setDescription(description);
+  
+  return embed;
+}
+
+// Get color for ride type
+function getRideColor(type) {
+  const colors = {
+    road: '#ff6b6b',      // Red
+    gravel: '#4ecdc4',    // Teal
+    trail: '#45b7d1',     // Blue
+    social: '#96ceb4'     // Green
+  };
+  return colors[type] || '#95a5a6'; // Default gray
 }
 
 // Get reaction emoji for attendee type

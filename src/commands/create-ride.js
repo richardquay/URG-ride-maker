@@ -166,7 +166,7 @@ module.exports = {
       const ride = await db.createRide(rideData);
 
       // Format and post ride message
-      const rideMessage = formatRidePost(ride);
+      const rideEmbed = formatRidePost(ride);
       const channel = interaction.guild.channels.cache.get(channelId);
       
       if (!channel) {
@@ -177,7 +177,7 @@ module.exports = {
         return;
       }
 
-      const message = await channel.send(rideMessage);
+      const message = await channel.send({ embeds: [rideEmbed] });
 
       // Add reactions
       await message.react('🚴‍♂️'); // Going
