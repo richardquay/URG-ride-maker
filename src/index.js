@@ -12,12 +12,14 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions
   ] 
 });
 
-// Create a collection for commands
+// Create collections for commands and events
 client.commands = new Collection();
+client.events = new Collection();
 
 // Load commands
 const commandsPath = path.join(__dirname, 'commands');
@@ -33,6 +35,22 @@ for (const file of commandFiles) {
     console.log(`✅ Loaded command: ${command.data.name}`);
   } else {
     console.log(`⚠️ The command at ${filePath} is missing a required "data" or "execute" property.`);
+  }
+}
+
+// Load events
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
+for (const file of eventFiles) {
+  const filePath = path.join(eventsPath, file);
+  const event = require(filePath);
+  
+  if ('name' in event && 'execute' in event) {
+    client.events.set(event.name, event);
+    console.log(`✅ Loaded event: ${event.name}`);
+  } else {
+    console.log(`⚠️ The event at ${filePath} is missing a required "name" or "execute" property.`);
   }
 }
 
@@ -101,6 +119,11 @@ client.on(Events.InteractionCreate, async interaction => {
     }
   }
 });
+
+// Handle events
+for (const [eventName, event] of client.events) {
+  client.on(eventName, event.execute);
+}
 
 // Handle errors
 client.on('error', error => {
