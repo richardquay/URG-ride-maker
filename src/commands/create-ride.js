@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../utils/database');
 const {
   parseDate,
@@ -349,11 +349,46 @@ module.exports = {
       // Update ride with message ID for future editing
       await db.updateRide(ride.id, { messageId: message.id });
 
-      // Confirm to user with ride ID for editing
-      await interaction.reply({
-        content: `✅ Ride created successfully! Posted to ${channel}\n\n**Ride ID**: \`${ride.id}\`\nUse \`/edit-ride ride-id:${ride.id}\` to edit this ride.`,
-        ephemeral: true
-      });
+      // Send confirmation DM to user with ride details
+      try {
+        // Calculate roll time
+        const rollTime = new Date(ride.date);
+        rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + ride.rollTime);
+        const rollTimeFormatted = `${rollTime.getHours().toString().padStart(2, '0')}:${rollTime.getMinutes().toString().padStart(2, '0')}`;
+
+        const dmEmbed = new EmbedBuilder()
+          .setTitle('✅ Ride Created Successfully!')
+          .setColor('#4ecdc4')
+          .setDescription(`Your **${ride.type.toUpperCase()}** ride has been posted to ${channel}`)
+          .addFields(
+            { name: '📅 Date', value: ride.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }), inline: true },
+            { name: '⏰ Meet Time', value: `${ride.meetTime.hours.toString().padStart(2, '0')}:${ride.meetTime.minutes.toString().padStart(2, '0')}`, inline: true },
+            { name: '🚀 Roll Time', value: rollTimeFormatted, inline: true },
+            { name: '🚴‍♂️ Pace', value: ride.pace.charAt(0).toUpperCase() + ride.pace.slice(1), inline: true },
+            { name: '🎯 Drop Policy', value: ride.dropPolicy === 'drop' ? 'Drop' : 'No Drop', inline: true },
+            { name: '📏 Distance', value: ride.mileage ? `${ride.mileage} miles` : 'Not specified', inline: true },
+            { name: '📍 Starting Location', value: ride.startingLocation || 'Not specified', inline: true },
+            { name: '🏁 End Location', value: ride.endLocation || 'Not specified', inline: true },
+            { name: '🆔 Ride ID', value: `\`${ride.id}\``, inline: false },
+            { name: '✏️ Quick Edit', value: `Use \`/edit-ride ride-id:${ride.id}\` to edit this ride`, inline: false }
+          )
+          .setFooter({ text: 'URG RideMaker • Ride Created' });
+
+        await interaction.user.send({ embeds: [dmEmbed] });
+
+        // Send ephemeral confirmation in channel
+        await interaction.reply({
+          content: `✅ Ride created successfully! Posted to ${channel}\n📬 Check your DMs for ride details and edit options.`,
+          ephemeral: true
+        });
+
+      } catch (dmError) {
+        // Fallback to channel message if DM fails
+        await interaction.reply({
+          content: `✅ Ride created successfully! Posted to ${channel}\n\n**Ride ID**: \`${ride.id}\`\nUse \`/edit-ride ride-id:${ride.id}\` to edit this ride.\n\n*Note: Unable to send DM. Please ensure DMs are enabled.*`,
+          ephemeral: true
+        });
+      }
 
     } catch (error) {
       console.error('Error creating ride from data:', error);
