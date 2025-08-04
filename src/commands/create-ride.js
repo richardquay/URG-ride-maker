@@ -59,7 +59,6 @@ module.exports = {
         .addChoices(
           { name: 'Angry Catfish', value: 'angry-catfish' },
           { name: 'Northern Coffeeworks', value: 'northern-coffeeworks' },
-          { name: 'Venn Brewery', value: 'venn-brewery' },
           { name: 'Other', value: 'other' }
         ))
     .addStringOption(option =>
@@ -71,6 +70,7 @@ module.exports = {
           { name: 'Northern Coffeeworks', value: 'northern-coffeeworks' },
           { name: 'Venn Brewery', value: 'venn-brewery' },
           { name: 'Bull Horns', value: 'bull-horns' },
+          { name: 'Sea Salt', value: 'sea-salt' },
           { name: 'Other', value: 'other' }
         ))
     .addStringOption(option =>
@@ -349,9 +349,9 @@ module.exports = {
       // Update ride with message ID for future editing
       await db.updateRide(ride.id, { messageId: message.id });
 
-      // Confirm to user
+      // Confirm to user with ride ID for editing
       await interaction.reply({
-        content: `✅ Ride created successfully! Posted to ${channel}`,
+        content: `✅ Ride created successfully! Posted to ${channel}\n\n**Ride ID**: \`${ride.id}\`\nUse \`/edit-ride ride-id:${ride.id}\` to edit this ride.`,
         ephemeral: true
       });
 

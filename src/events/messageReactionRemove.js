@@ -39,8 +39,7 @@ module.exports = {
       // Map emoji to attendee type
       const emojiToType = {
         '🚴‍♂️': 'going',
-        '🤔': 'maybe',
-        '🌧️': 'weather'
+        '🤔': 'maybe'
       };
 
       const attendeeType = emojiToType[reaction.emoji.name];

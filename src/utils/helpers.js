@@ -19,6 +19,10 @@ const LOCATIONS = {
   'bull-horns': {
     name: 'Bull Horns',
     url: 'https://maps.app.goo.gl/ZW5c6xZdnPK3URpR8'
+  },
+  'sea-salt': {
+    name: 'Sea Salt',
+    url: 'https://maps.app.goo.gl/M9fbExNSi3mWRJzR9'
   }
 };
 
@@ -193,11 +197,21 @@ function formatRidePost(ride, action = 'created') {
     ? `${ride.pace} (${ride.avgSpeed} mph)`
     : ride.pace;
   
+  // Format timestamp for footer
+  const timestamp = action === 'created' ? ride.createdAt : ride.updatedAt;
+  const formattedTime = timestamp.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+  
   // Create embed
   const embed = new EmbedBuilder()
     .setTitle(`${ride.type.toUpperCase()} RIDE`)
     .setColor(getRideColor(ride.type))
-    .setFooter({ text: `URG RideMaker • ${action}` });
+    .setFooter({ text: `URG RideMaker • ${action} ${formattedTime}` });
 
   // Add description with smaller icons and proper spacing
   let description = `**Date**: ${ride.date.toLocaleDateString()}\n`;

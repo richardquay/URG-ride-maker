@@ -10,12 +10,19 @@ A Discord bot with Firestore database integration for checking database status a
 - ✅ Error handling and logging
 - ✅ Modern Discord.js v14 implementation
 - ✅ Cloud hosting on Railway
+- ✅ Ride creation with comprehensive details
+- ✅ DM-based ride editing system
+- ✅ Real-time ride updates in channels
+- ✅ Ride listing and management
 
 ## Commands
 
 - `/ping` - Test bot connectivity and latency
 - `/dbstatus` - Check Firestore database connection status
 - `/status` - Comprehensive bot and database status report
+- `/create-ride` - Create a new bike ride with all details
+- `/edit-ride` - Send a DM to edit ride details (ride leaders only)
+- `/list-rides` - List active rides with their IDs for editing
 
 ## Architecture
 
@@ -206,6 +213,35 @@ The bot provides detailed console logging:
 | **Firebase Only** | Free | $25+/month (Blaze) | $25+/month |
 | **Railway Only** | $5/month | Free | $5/month |
 | **Hybrid (Recommended)** | Free | Free | **$0/month** |
+
+## Ride Management Features
+
+### Creating Rides
+Use `/create-ride` to create a new bike ride with:
+- Ride type (Road, Gravel, Trail, Social)
+- Pace (Spicy, Party)
+- Date and start time
+- Drop policy
+- Starting and end locations
+- Distance and route information
+- Average speed (for Spicy rides)
+
+### Editing Rides
+Ride leaders can edit their rides using the DM-based editing system:
+
+1. **Get Ride ID**: Use `/list-rides` to see all active rides with their IDs
+2. **Start Edit**: Use `/edit-ride ride-id:ID` to send edit options to your DM
+3. **Choose What to Edit**: Click buttons in the DM to edit:
+   - 📅 Date/Time (date, start time, roll time)
+   - 📍 Location (starting and end locations)
+   - 📝 Details (mileage, route, average speed)
+4. **Save Changes**: The original ride message in the channel is automatically updated
+
+### Ride Updates
+- All ride edits are reflected in real-time in the original channel message
+- Only ride leaders can edit their own rides
+- Past rides cannot be edited
+- All changes are validated and error-checked
 
 ## Next Steps
 

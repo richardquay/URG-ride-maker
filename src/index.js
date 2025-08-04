@@ -120,15 +120,15 @@ client.on(Events.InteractionCreate, async interaction => {
     }
   }
   
-  // Handle modal submissions
-  if (interaction.isModalSubmit()) {
-    const event = interaction.client.events.get(Events.ModalSubmit);
+  // Handle button interactions and modal submissions
+  if (interaction.isButton() || interaction.isModalSubmit()) {
+    const event = interaction.client.events.get(Events.InteractionCreate);
     
     if (event) {
       try {
         await event.execute(interaction);
       } catch (error) {
-        console.error('Error handling modal submission:', error);
+        console.error('Error handling interaction:', error);
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp({ 
             content: 'There was an error while processing your input!', 
