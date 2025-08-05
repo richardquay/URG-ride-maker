@@ -193,9 +193,12 @@ function formatRidePost(ride, action = 'created') {
   rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + ride.rollTime);
   const rollTimeFormatted = formatTime(rollTime.getHours(), rollTime.getMinutes());
   
-  const paceText = ride.pace === 'spicy' && ride.avgSpeed 
-    ? `${ride.pace} (${ride.avgSpeed} mph)`
-    : ride.pace;
+  // Format date for display
+  const dateDisplay = ride.date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  });
   
   // Format timestamp for footer
   const timestamp = action === 'created' ? ride.createdAt : ride.updatedAt;
@@ -209,39 +212,61 @@ function formatRidePost(ride, action = 'created') {
   
   // Create embed
   const embed = new EmbedBuilder()
-    .setTitle(`${ride.type.toUpperCase()} RIDE`)
+    .setTitle(`New ${ride.type.charAt(0).toUpperCase() + ride.type.slice(1)} Ride 🚴🚴‍♀️`)
     .setColor(getRideColor(ride.type))
-    .setFooter({ text: `URG RideMaker • ${action} ${formattedTime}` });
+    .setFooter({ text: `URG Ride Maker • ${action === 'created' ? 'Created' : 'Updated'} ${formattedTime}` });
 
-  // Add description with smaller icons and proper spacing
-  let description = `**Date**: ${ride.date.toLocaleDateString()}\n`;
-  description += `**Meet**: ${meetTime} | **Roll**: ${rollTimeFormatted}\n`;
-  description += `**Pace**: ${paceText}\n`;
-  description += `**Drop Policy**: ${ride.dropPolicy}\n`;
+  // Build description with structured sections
+  let description = '';
   
-  // Add starting and end locations
+  // First section: Date, Meet, Roll out, Starting, Ending
+  description += `**Date:** 📅 ${dateDisplay}\n`;
+  description += `**Meet @:** ⌚ ${meetTime} | **Roll out @:** ⚪ ${rollTimeFormatted}\n`;
+  
   if (ride.startingLocation) {
     const formattedStart = formatLocation(ride.startingLocation);
-    description += `**Start**: ${formattedStart}\n`;
+    description += `**Starting:** 🕸️ ${formattedStart}`;
   }
   
   if (ride.endLocation) {
     const formattedEnd = formatLocation(ride.endLocation);
-    description += `**End**: ${formattedEnd}\n`;
+    description += ` | **Ending:** 🐟 ${formattedEnd}`;
+  }
+  description += '\n';
+  
+  // Visual separator
+  description += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  
+  // Second section: Vibe, Avg speed, Distance, Route
+  const paceText = ride.pace === 'spicy' && ride.avgSpeed 
+    ? `${ride.pace} (${ride.avgSpeed} mph)`
+    : ride.pace;
+  
+  // Combine vibe and drop policy
+  const vibeText = `${paceText}, ${ride.dropPolicy}`;
+  description += `**Vibe:** 🎉 ${vibeText}\n`;
+  
+  if (ride.avgSpeed) {
+    description += `**Avg speed:** 🚤 ${ride.avgSpeed} mph`;
   }
   
   if (ride.mileage) {
-    description += `**Distance**: ${ride.mileage} miles\n`;
+    description += ` | **Distance:** 📏 ${ride.mileage} miles`;
   }
   
   if (ride.route) {
-    description += `**Route**: ${ride.route}\n`;
+    description += `\n**Route:** ${ride.route}`;
   }
+  description += '\n';
   
-  description += `**Lead**: <@${ride.leader.id}>`;
+  // Visual separator
+  description += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  
+  // Third section: Leader, Sweep
+  description += `**Leader:** <@${ride.leader.id}>`;
   
   if (ride.sweep) {
-    description += `\n**Sweep**: <@${ride.sweep.id}>`;
+    description += ` | **Sweep:** <@${ride.sweep.id}>`;
   }
   
   embed.setDescription(description);

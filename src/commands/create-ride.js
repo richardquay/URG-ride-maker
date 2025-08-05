@@ -20,7 +20,7 @@ module.exports = {
     .setDescription('Create a new bike ride')
     .addStringOption(option =>
       option.setName('type')
-        .setDescription('Type of ride')
+        .setDescription('Type of ride (REQUIRED)')
         .setRequired(true)
         .addChoices(
           { name: 'Road', value: 'road' },
@@ -30,7 +30,7 @@ module.exports = {
         ))
     .addStringOption(option =>
       option.setName('pace')
-        .setDescription('Ride pace')
+        .setDescription('Ride pace (REQUIRED)')
         .setRequired(true)
         .addChoices(
           { name: 'Spicy', value: 'spicy' },
@@ -38,15 +38,15 @@ module.exports = {
         ))
     .addStringOption(option =>
       option.setName('date')
-        .setDescription('Ride date (MM/DD, Today, or Tomorrow)')
+        .setDescription('Ride date (REQUIRED) - MM/DD, Today, or Tomorrow')
         .setRequired(true))
     .addStringOption(option =>
       option.setName('start-time')
-        .setDescription('Start time (HH:MM or HH:MM AM/PM)')
+        .setDescription('Start time (REQUIRED) - HH:MM or HH:MM AM/PM')
         .setRequired(true))
     .addStringOption(option =>
       option.setName('drop')
-        .setDescription('Drop policy')
+        .setDescription('Drop policy (REQUIRED)')
         .setRequired(true)
         .addChoices(
           { name: 'Drop', value: 'drop' },
@@ -54,7 +54,7 @@ module.exports = {
         ))
     .addStringOption(option =>
       option.setName('starting-location')
-        .setDescription('Starting location (optional - will default based on time)')
+        .setDescription('Starting location (OPTIONAL) - will default based on time')
         .setRequired(false)
         .addChoices(
           { name: 'Angry Catfish', value: 'angry-catfish' },
@@ -63,7 +63,7 @@ module.exports = {
         ))
     .addStringOption(option =>
       option.setName('end-location')
-        .setDescription('End location')
+        .setDescription('End location (OPTIONAL)')
         .setRequired(false)
         .addChoices(
           { name: 'Angry Catfish', value: 'angry-catfish' },
@@ -75,19 +75,19 @@ module.exports = {
         ))
     .addStringOption(option =>
       option.setName('mileage')
-        .setDescription('Distance in miles (or km)')
+        .setDescription('Distance in miles (OPTIONAL)')
         .setRequired(false))
     .addStringOption(option =>
       option.setName('route')
-        .setDescription('Strava or RideWithGPS route URL')
+        .setDescription('Strava or RideWithGPS route URL (OPTIONAL)')
         .setRequired(false))
     .addIntegerOption(option =>
       option.setName('avg-speed')
-        .setDescription('Average speed in MPH (required for Spicy pace)')
+        .setDescription('Average speed in MPH (OPTIONAL)')
         .setRequired(false))
     .addIntegerOption(option =>
       option.setName('roll-time')
-      .setDescription('Roll time offset in minutes')
+      .setDescription('Roll time offset in minutes (OPTIONAL)')
       .setRequired(false)
       .addChoices(
         { name: '+5 minutes', value: 5 },
@@ -96,7 +96,7 @@ module.exports = {
       ))
     .addUserOption(option =>
       option.setName('sweep')
-        .setDescription('Sweep rider')
+        .setDescription('Sweep rider (OPTIONAL)')
         .setRequired(false)),
 
   async execute(interaction) {
@@ -271,14 +271,7 @@ module.exports = {
         endLocation
       } = data;
 
-      // Validate required avg-speed for Spicy pace
-      if (pace === 'spicy' && !avgSpeed) {
-        await interaction.reply({
-          content: '❌ Average speed is required for Spicy pace rides.',
-          ephemeral: true
-        });
-        return;
-      }
+
 
       // Parse inputs
       const date = parseDate(dateString);
