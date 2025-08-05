@@ -258,33 +258,25 @@ function formatRidePost(ride, action = 'created') {
     .setColor(getRideColor(ride.type))
     .setFooter({ text: `URG Ride Maker • ${action === 'created' ? 'Created' : 'Updated'} ${formattedTime}` });
 
+  // Build description with structured sections
+  let description = '';
+
   // Add fields to embed
   embed.addFields(
     { name: 'Date:', value: `📅 ${dateDisplay}`, inline: false },
-    { name: 'Meet @:', value: `⏰ ${meetTime} | ⏳ ${rollTimeFormatted}`, inline: true },
-    { name: 'Starting:', value: `🕸️ ${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: true },
-    { name: 'Ending:', value: `🐟 ${ride.endLocation ? formatLocation(ride.endLocation) : 'Not specified'}`, inline: true },
-    { name: 'Vibe:', value: `🎉 ${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: true }
+    { name: 'Meet @', value: `⏰ ${meetTime}`, inline: false },
+    { name: 'Roll out @', value: `⏳ ${rollTimeFormatted}`, inline: false },
+    { name: 'Vibe:', value: `🎉 ${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: false },
+    { name: 'Starting:', value: `🕸️ ${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: false },
+    { name: 'Ending:', value: `🐟 ${ride.endLocation ? formatLocation(ride.endLocation) : 'Not specified'}`, inline: false },
+    { name: 'Distance:', value: `📏 ${ride.mileage ? `${ride.mileage} miles` : 'Not specified'}`, inline: false },
+    { name: 'Route:', value: `🗺️ ${ride.route ? ride.route : 'Not specified'}`, inline: false },
+    { name: 'Leader:', value: `🚴‍♂️ <@${ride.leader.id}>`, inline: false },
+    { name: 'Sweep:', value: `🚴‍♂️ <@${ride.sweep.id}>`, inline: false },
   )
   
-    // Build description with structured sections
-  let description = '';
+
   
-  // First section: Date, Meet, Roll out, Starting, Ending
-  
-  description += `**Date:** 📅 ${dateDisplay}\n`;
-  description += `**Meet @:** ⏰ ${meetTime} | **Roll out @:** ⏳ ${rollTimeFormatted}\n`;
-  
-  if (ride.startingLocation) {
-    const formattedStart = formatLocation(ride.startingLocation);
-    description += `**Starting:** 🕸️ ${formattedStart}`;
-  }
-  
-  if (ride.endLocation) {
-    const formattedEnd = formatLocation(ride.endLocation);
-    description += ` | **Ending:** 🐟 ${formattedEnd}`;
-  }
-  description += '\n\n';
   
   // Second section: Vibe, Avg speed, Distance, Route
   const paceText = ride.pace === 'spicy' && ride.avgSpeed 
@@ -306,16 +298,7 @@ function formatRidePost(ride, action = 'created') {
   if (ride.route) {
     description += `\n**Route:** ${ride.route}`;
   }
-  description += '\n\n';
-  
-  // Third section: Leader, Sweep
-  description += `**Leader:** <@${ride.leader.id}>`;
-  
-  if (ride.sweep) {
-    description += ` | **Sweep:** <@${ride.sweep.id}>`;
-  }
-  description += '\n\n';
-  embed.setDescription(description);
+
   
   return embed;
 }
