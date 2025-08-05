@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../utils/database');
-const { formatRidePost } = require('../utils/helpers');
+const { formatRidePost, formatDateWithToday } = require('../utils/helpers');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -46,7 +46,7 @@ module.exports = {
         // Allow editing if ride is today or in the future
         if (rideDateOnly < nowDateOnly) {
           await interaction.reply({
-            content: `❌ Cannot edit past rides. This ride is scheduled for ${rideDateOnly.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}.`,
+            content: `❌ Cannot edit past rides. This ride is scheduled for ${formatDateWithToday(ride.date, 'long')}.`,
             ephemeral: true
           });
           return;
@@ -56,7 +56,7 @@ module.exports = {
       // Create edit options embed
       const editEmbed = new EmbedBuilder()
         .setTitle('🚴‍♂️ Edit Ride Options')
-        .setDescription(`**Ride**: ${ride.type.toUpperCase()} - ${ride.date ? ride.date.toLocaleDateString() : 'Date not set'}`)
+        .setDescription(`**Ride**: ${ride.type.toUpperCase()} - ${formatDateWithToday(ride.date, 'short')}`)
         .setColor('#4ecdc4')
         .addFields(
           { name: 'What would you like to edit?', value: 'Click a button below to edit a specific field.' }

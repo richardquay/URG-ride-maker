@@ -6,6 +6,7 @@ const {
   parseMileage,
   validateRouteUrl,
   formatRidePost,
+  formatDateWithToday,
   getReactionEmoji,
   validateRideType,
   validatePace,
@@ -355,7 +356,7 @@ module.exports = {
           .setColor('#4ecdc4')
           .setDescription(`Your **${ride.type.toUpperCase()}** ride has been posted to ${channel}`)
           .addFields(
-            { name: 'Date', value: ride.date ? ride.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'Date not set', inline: true },
+            { name: 'Date', value: formatDateWithToday(ride.date, 'long'), inline: true },
             { name: 'Meet Time', value: `${ride.meetTime.hours.toString().padStart(2, '0')}:${ride.meetTime.minutes.toString().padStart(2, '0')}`, inline: true },
             { name: 'Roll Time', value: rollTimeFormatted, inline: true },
             { name: 'Pace', value: ride.pace.charAt(0).toUpperCase() + ride.pace.slice(1), inline: true },

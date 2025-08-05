@@ -5,23 +5,23 @@ const { EmbedBuilder } = require('discord.js');
 // Location data with names and URLs
 const LOCATIONS = {
   'angry-catfish': {
-    name: 'Angry Catfish',
+    name: '🚲 Angry Catfish',
     url: 'https://maps.app.goo.gl/rrxhyZeaJR5UxfKp6'
   },
   'northern-coffeeworks': {
-    name: 'Northern Coffeeworks',
+    name: '☕Northern Coffeeworks',
     url: 'https://maps.app.goo.gl/YjYhaHCDZkeggseT9'
   },
   'venn-brewery': {
-    name: 'Venn Brewery',
+    name: '🍺 Venn Brewery',
     url: 'https://maps.app.goo.gl/L3qNdfBptyKAZuam8'
   },
   'bull-horns': {
-    name: 'Bull Horns',
+    name: '🐂 Bull Horns',
     url: 'https://maps.app.goo.gl/ZW5c6xZdnPK3URpR8'
   },
   'sea-salt': {
-    name: 'Sea Salt',
+    name: '🐟 Sea Salt',
     url: 'https://maps.app.goo.gl/M9fbExNSi3mWRJzR9'
   }
 };
@@ -161,6 +161,49 @@ function formatTime(hours, minutes) {
   return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
+// Format date for display with "Today" prefix if applicable
+function formatDateWithToday(date, format = 'short') {
+  if (!date) return 'Date not set';
+  
+  const today = new Date();
+  const rideDate = new Date(date);
+  
+  // Check if the ride is today
+  const isToday = rideDate.getFullYear() === today.getFullYear() &&
+                 rideDate.getMonth() === today.getMonth() &&
+                 rideDate.getDate() === today.getDate();
+  
+  if (isToday) {
+    if (format === 'long') {
+      return `Today, ${rideDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      })}`;
+    } else {
+      return `Today, ${rideDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })}`;
+    }
+  } else {
+    if (format === 'long') {
+      return rideDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      });
+    } else {
+      return rideDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+  }
+}
+
 // Parse mileage and convert KM to miles if needed
 function parseMileage(mileageString) {
   const mileage = parseFloat(mileageString);
@@ -197,11 +240,7 @@ function formatRidePost(ride, action = 'created') {
   const rollTimeFormatted = formatTime(rollTime.getHours(), rollTime.getMinutes());
   
   // Format date for display
-  const dateDisplay = ride.date ? ride.date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric'
-  }) : 'Date not set';
+  const dateDisplay = formatDateWithToday(ride.date, 'short');
   
   // Format timestamp for footer
   const timestamp = action === 'created' ? ride.createdAt : ride.updatedAt;
@@ -257,7 +296,7 @@ function formatRidePost(ride, action = 'created') {
   if (ride.route) {
     description += `\n**Route:** ${ride.route}`;
   }
-  description += '\n\n';
+  description += '\n';
   
   // Third section: Leader, Sweep
   description += `**Leader:** <@${ride.leader.id}>`;
@@ -265,7 +304,7 @@ function formatRidePost(ride, action = 'created') {
   if (ride.sweep) {
     description += ` | **Sweep:** <@${ride.sweep.id}>`;
   }
-  
+  description += '\n';
   embed.setDescription(description);
   
   return embed;
@@ -322,6 +361,7 @@ module.exports = {
   parseDate,
   parseTime,
   formatTime,
+  formatDateWithToday,
   parseMileage,
   validateRouteUrl,
   formatRidePost,
