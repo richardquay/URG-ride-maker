@@ -35,15 +35,22 @@ module.exports = {
         return;
       }
 
-      // Check if the ride is in the future
+            // Check if the ride is in the past (allow editing rides from today or future)
       const now = new Date();
       const rideDate = ride.date ? new Date(ride.date) : null;
-      if (rideDate && rideDate < now) {
-        await interaction.reply({
-          content: '❌ Cannot edit past rides.',
-          ephemeral: true
-        });
-        return;
+      
+      if (rideDate) {
+        const rideDateOnly = new Date(rideDate.getFullYear(), rideDate.getMonth(), rideDate.getDate());
+        const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        // Allow editing if ride is today or in the future
+        if (rideDateOnly < nowDateOnly) {
+          await interaction.reply({
+            content: `❌ Cannot edit past rides. This ride is scheduled for ${rideDateOnly.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}.`,
+            ephemeral: true
+          });
+          return;
+        }
       }
 
       // Create edit options embed

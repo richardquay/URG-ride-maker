@@ -86,8 +86,11 @@ function parseDate(dateString) {
     // Create date for current year
     let date = new Date(currentYear, month, day);
     
+    // Create a date object for today at midnight for comparison
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
     // If the date has already passed this year, assume next year
-    if (date < today) {
+    if (date < todayAtMidnight) {
       date = new Date(currentYear + 1, month, day);
     }
     
