@@ -264,8 +264,9 @@ function formatRidePost(ride, action = 'created') {
     { name: 'Meet @:', value: `⏰ ${meetTime} | ⏳ ${rollTimeFormatted}`, inline: true },
     { name: 'Starting:', value: `🕸️ ${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: true },
     { name: 'Ending:', value: `🐟 ${ride.endLocation ? formatLocation(ride.endLocation) : 'Not specified'}`, inline: true },
-    { name: 'Vibe:', value: `🎉 ${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: true },
- 
+    { name: 'Vibe:', value: `🎉 ${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: true }
+  )
+  
     // Build description with structured sections
   let description = '';
   
