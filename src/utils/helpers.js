@@ -258,19 +258,19 @@ function formatRidePost(ride, action = 'created') {
     .setColor(getRideColor(ride.type))
     .setFooter({ text: `URG Ride Maker • ${action === 'created' ? 'Created' : 'Updated'} ${formattedTime}` });
 
-  // Build description with structured sections
-  let description = '';
-  
-  // First section: Date, Meet, Roll out, Starting, Ending
-  .addFields (
+  // Add fields to embed
+  embed.addFields(
     { name: 'Date:', value: `📅 ${dateDisplay}`, inline: false },
     { name: 'Meet @:', value: `⏰ ${meetTime} | ⏳ ${rollTimeFormatted}`, inline: true },
     { name: 'Starting:', value: `🕸️ ${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: true },
     { name: 'Ending:', value: `🐟 ${ride.endLocation ? formatLocation(ride.endLocation) : 'Not specified'}`, inline: true },
     { name: 'Vibe:', value: `🎉 ${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: true },
-    { name: 'Avg speed:', value: `🚤 ${ride.avgSpeed ? `${ride.avgSpeed} mph` : 'Not specified'}`, inline: true },
-    { name: 'Distance:', value: `📏 ${ride.mileage ? `${ride.mileage} miles` : 'Not specified'}`, inline: true },
-  )
+ 
+    // Build description with structured sections
+  let description = '';
+  
+  // First section: Date, Meet, Roll out, Starting, Ending
+  
   description += `**Date:** 📅 ${dateDisplay}\n`;
   description += `**Meet @:** ⏰ ${meetTime} | **Roll out @:** ⏳ ${rollTimeFormatted}\n`;
   
