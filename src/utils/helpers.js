@@ -259,18 +259,26 @@ function formatRidePost(ride, action = 'created') {
     .setFooter({ text: `URG Ride Maker • ${action === 'created' ? 'Created' : 'Updated'} ${formattedTime}` });
 
   // Add fields to embed
-  embed.addFields(
+  const fields = [
     { name: 'Date:', value: `📅 ${dateDisplay}`, inline: false },
     { name: 'Meet @', value: `⏰ ${meetTime}`, inline: false },
     { name: 'Roll out @', value: `⏳ ${rollTimeFormatted}`, inline: false },
+    { name: '\u200b', value: '\u200b', inline: false }, // Spacer
     { name: 'Vibe:', value: `🎉 ${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: false },
     { name: 'Starting:', value: `🕸️ ${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: false },
     { name: 'Ending:', value: `🐟 ${ride.endLocation ? formatLocation(ride.endLocation) : 'Not specified'}`, inline: false },
+    { name: '\u200b', value: '\u200b', inline: false }, // Spacer
     { name: 'Distance:', value: `📏 ${ride.mileage ? `${ride.mileage} miles` : 'Not specified'}`, inline: false },
     { name: 'Route:', value: `🗺️ ${ride.route ? ride.route : 'Not specified'}`, inline: false },
-    { name: 'Leader:', value: `🚴‍♂️ <@${ride.leader.id}>`, inline: false },
-    { name: 'Sweep:', value: `🚴‍♂️ <@${ride.sweep.id}>`, inline: false },
-  )  
+    { name: 'Leader:', value: `🚴‍♂️ <@${ride.leader.id}>`, inline: false }
+  ];
+
+  // Only add sweep field if sweep is assigned
+  if (ride.sweep) {
+    fields.push({ name: 'Sweep:', value: `🚴‍♂️ <@${ride.sweep.id}>`, inline: false });
+  }
+
+  embed.addFields(...fields);  
   return embed;
 }
 
