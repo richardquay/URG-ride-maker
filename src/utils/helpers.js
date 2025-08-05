@@ -264,18 +264,36 @@ function formatRidePost(ride, action = 'created') {
     { name: 'Meet @', value: `⏰ ${meetTime}`, inline: true },
     { name: 'Roll out @', value: `⏳ ${rollTimeFormatted}`, inline: true },
     { name: '\u200b', value: '\u200b', inline: false }, // Spacer
-    { name: 'Vibe:', value: `🎉 ${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: true },
-    { name: 'Starting:', value: `🕸️ ${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: true },
-    { name: 'Ending:', value: `🐟 ${ride.endLocation ? formatLocation(ride.endLocation) : 'Not specified'}`, inline: true },
-    { name: '\u200b', value: '\u200b', inline: false }, // Spacer
-    { name: 'Distance:', value: `📏 ${ride.mileage ? `${ride.mileage} miles` : 'Not specified'}`, inline: true },
-    { name: 'Route:', value: `🗺️ ${ride.route ? ride.route : 'Not specified'}`, inline: true },
-    { name: 'Leader:', value: `🚴‍♂️ <@${ride.leader.id}>`, inline: true }
+    { name: 'Vibe:', value: `${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: true },
+    { name: 'Starting:', value: `${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: true }
   ];
+
+  // Only add ending location if specified
+  if (ride.endLocation) {
+    fields.push({ name: 'Ending:', value: `${formatLocation(ride.endLocation)}`, inline: true });
+  }
+
+  // Add spacer if we have ending location
+  if (ride.endLocation) {
+    fields.push({ name: '\u200b', value: '\u200b', inline: false }); // Spacer
+  }
+
+  // Only add distance if specified
+  if (ride.mileage) {
+    fields.push({ name: 'Distance:', value: `📏 ${ride.mileage} miles`, inline: true });
+  }
+
+  // Only add route if specified
+  if (ride.route) {
+    fields.push({ name: 'Route:', value: `🗺️ ${ride.route}`, inline: true });
+  }
+
+  // Add leader field
+  fields.push({ name: 'Leader:', value: `🚴‍♂️ <@${ride.leader.id}>`, inline: true });
 
   // Only add sweep field if sweep is assigned
   if (ride.sweep) {
-    fields.push({ name: 'Sweep:', value: `🚴‍♂️ <@${ride.sweep.id}>`, inline: false });
+    fields.push({ name: 'Sweep:', value: `🚴‍♂️ <@${ride.sweep.id}>`, inline: true });
   }
 
   embed.addFields(...fields);  
