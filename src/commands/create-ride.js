@@ -33,8 +33,8 @@ module.exports = {
         .setDescription('Ride pace (REQUIRED)')
         .setRequired(true)
         .addChoices(
-          { name: 'Spicy', value: 'spicy' },
-          { name: 'Party', value: 'party' }
+          { name: '🌶️ Spicy', value: 'spicy' },
+          { name: '🎉 Party', value: 'party' }
         ))
     .addStringOption(option =>
       option.setName('date')
@@ -50,7 +50,8 @@ module.exports = {
         .setRequired(true)
         .addChoices(
           { name: 'Drop', value: 'drop' },
-          { name: 'No Drop', value: 'no-drop' }
+          { name: 'No Drop', value: 'no-drop' },
+          { name: 'Regroup', value: 'regroup' }
         ))
     .addStringOption(option =>
       option.setName('starting-location')
@@ -346,7 +347,7 @@ module.exports = {
       try {
         // Calculate roll time
         const rollTime = new Date(ride.date);
-        rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + ride.rollTime);
+        rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + (ride.rollTime || 0));
         const rollTimeFormatted = `${rollTime.getHours().toString().padStart(2, '0')}:${rollTime.getMinutes().toString().padStart(2, '0')}`;
 
         const dmEmbed = new EmbedBuilder()
@@ -354,16 +355,16 @@ module.exports = {
           .setColor('#4ecdc4')
           .setDescription(`Your **${ride.type.toUpperCase()}** ride has been posted to ${channel}`)
           .addFields(
-            { name: '📅 Date', value: ride.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }), inline: true },
-            { name: '⏰ Meet Time', value: `${ride.meetTime.hours.toString().padStart(2, '0')}:${ride.meetTime.minutes.toString().padStart(2, '0')}`, inline: true },
-            { name: '🚀 Roll Time', value: rollTimeFormatted, inline: true },
-            { name: '🚴‍♂️ Pace', value: ride.pace.charAt(0).toUpperCase() + ride.pace.slice(1), inline: true },
-            { name: '🎯 Drop Policy', value: ride.dropPolicy === 'drop' ? 'Drop' : 'No Drop', inline: true },
-            { name: '📏 Distance', value: ride.mileage ? `${ride.mileage} miles` : 'Not specified', inline: true },
-            { name: '📍 Starting Location', value: ride.startingLocation || 'Not specified', inline: true },
-            { name: '🏁 End Location', value: ride.endLocation || 'Not specified', inline: true },
+            { name: 'Date', value: ride.date ? ride.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'Date not set', inline: true },
+            { name: 'Meet Time', value: `${ride.meetTime.hours.toString().padStart(2, '0')}:${ride.meetTime.minutes.toString().padStart(2, '0')}`, inline: true },
+            { name: 'Roll Time', value: rollTimeFormatted, inline: true },
+            { name: 'Pace', value: ride.pace.charAt(0).toUpperCase() + ride.pace.slice(1), inline: true },
+            { name: 'Drop Policy', value: ride.dropPolicy === 'drop' ? 'Drop' : 'No Drop', inline: true },
+            { name: 'Distance', value: ride.mileage ? `${ride.mileage} miles` : 'Not specified', inline: true },
+            { name: 'Starting Location', value: ride.startingLocation || 'Not specified', inline: true },
+            { name: 'End Location', value: ride.endLocation || 'Not specified', inline: true },
             { name: '🆔 Ride ID', value: `\`${ride.id}\``, inline: false },
-            { name: '✏️ Quick Edit', value: `Use \`/edit-ride ride-id:${ride.id}\` to edit this ride`, inline: false }
+            { name: '✏️ Quick Edit', value: `Copy & past the following into the command bar of that discord server: \`/edit-ride ride-id:${ride.id}\` to edit this ride`, inline: false }
           )
           .setFooter({ text: 'URG RideMaker • Ride Created' });
 

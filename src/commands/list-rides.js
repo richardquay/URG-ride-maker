@@ -57,7 +57,7 @@ module.exports = {
         const isLeader = ride.leader.id === interaction.user.id;
         const leaderIndicator = isLeader ? ' 👑' : '';
         
-        description += `**${ride.type.toUpperCase()}** - ${date.toLocaleDateString()} at ${meetTime}${leaderIndicator}\n`;
+        description += `**${ride.type.toUpperCase()}** - ${date ? date.toLocaleDateString() : 'Date not set'} at ${meetTime}${leaderIndicator}\n`;
         description += `**Ride ID**: \`${ride.id}\`\n`;
         description += `**Leader**: <@${ride.leader.id}>\n`;
         

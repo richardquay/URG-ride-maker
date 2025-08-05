@@ -37,8 +37,8 @@ module.exports = {
 
       // Check if the ride is in the future
       const now = new Date();
-      const rideDate = new Date(ride.date);
-      if (rideDate < now) {
+      const rideDate = ride.date ? new Date(ride.date) : null;
+      if (rideDate && rideDate < now) {
         await interaction.reply({
           content: '❌ Cannot edit past rides.',
           ephemeral: true
@@ -49,7 +49,7 @@ module.exports = {
       // Create edit options embed
       const editEmbed = new EmbedBuilder()
         .setTitle('🚴‍♂️ Edit Ride Options')
-        .setDescription(`**Ride**: ${ride.type.toUpperCase()} - ${ride.date.toLocaleDateString()}`)
+        .setDescription(`**Ride**: ${ride.type.toUpperCase()} - ${ride.date ? ride.date.toLocaleDateString() : 'Date not set'}`)
         .setColor('#4ecdc4')
         .addFields(
           { name: 'What would you like to edit?', value: 'Click a button below to edit a specific field.' }

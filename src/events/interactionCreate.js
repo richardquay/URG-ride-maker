@@ -87,7 +87,7 @@ function createEditModal(rideId, editType, ride) {
       .setLabel('Date (MM/DD, Today, or Tomorrow)')
       .setStyle(TextInputStyle.Short)
       .setRequired(true)
-      .setValue(ride.date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }));
+      .setValue(ride.date ? ride.date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '');
 
     const timeInput = new TextInputBuilder()
       .setCustomId('time_input')

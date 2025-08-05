@@ -1,6 +1,27 @@
 const { getFirestore } = require('../config/firebase');
 
 // Database utility functions for the ride bot
+
+// Helper function to convert Firestore Timestamps to Date objects
+function convertTimestamps(data) {
+  if (!data) return data;
+  
+  const converted = { ...data };
+  
+  // Convert common timestamp fields
+  if (data.date && typeof data.date.toDate === 'function') {
+    converted.date = data.date.toDate();
+  }
+  if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+    converted.createdAt = data.createdAt.toDate();
+  }
+  if (data.updatedAt && typeof data.updatedAt.toDate === 'function') {
+    converted.updatedAt = data.updatedAt.toDate();
+  }
+  
+  return converted;
+}
+
 class DatabaseManager {
   constructor() {
     this.db = null;
@@ -18,7 +39,8 @@ class DatabaseManager {
     try {
       const doc = await this.getDb().collection('serverConfigs').doc(serverId).get();
       if (doc.exists) {
-        return doc.data();
+        const data = doc.data();
+        return convertTimestamps(data);
       }
       return null;
     } catch (error) {
@@ -88,7 +110,8 @@ class DatabaseManager {
     try {
       const doc = await this.getDb().collection('rides').doc(rideId).get();
       if (doc.exists) {
-        return { id: doc.id, ...doc.data() };
+        const data = doc.data();
+        return { id: doc.id, ...convertTimestamps(data) };
       }
       return null;
     } catch (error) {
@@ -120,7 +143,10 @@ class DatabaseManager {
         .orderBy('date', 'asc')
         .get();
 
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return { id: doc.id, ...convertTimestamps(data) };
+      });
     } catch (error) {
       console.error('Error getting active rides:', error);
       throw error;

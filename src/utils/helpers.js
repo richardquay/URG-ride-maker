@@ -190,25 +190,25 @@ function validateRouteUrl(url) {
 function formatRidePost(ride, action = 'created') {
   const meetTime = formatTime(ride.meetTime.hours, ride.meetTime.minutes);
   const rollTime = new Date(ride.date);
-  rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + ride.rollTime);
+  rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + (ride.rollTime || 0));
   const rollTimeFormatted = formatTime(rollTime.getHours(), rollTime.getMinutes());
   
   // Format date for display
-  const dateDisplay = ride.date.toLocaleDateString('en-US', {
+  const dateDisplay = ride.date ? ride.date.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
-  });
+  }) : 'Date not set';
   
   // Format timestamp for footer
   const timestamp = action === 'created' ? ride.createdAt : ride.updatedAt;
-  const formattedTime = timestamp.toLocaleString('en-US', {
+  const formattedTime = timestamp ? timestamp.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
     hour12: true
-  });
+  }) : 'Unknown';
   
   // Create embed
   const embed = new EmbedBuilder()
@@ -221,7 +221,7 @@ function formatRidePost(ride, action = 'created') {
   
   // First section: Date, Meet, Roll out, Starting, Ending
   description += `**Date:** 📅 ${dateDisplay}\n`;
-  description += `**Meet @:** ⌚ ${meetTime} | **Roll out @:** ⚪ ${rollTimeFormatted}\n`;
+  description += `**Meet @:** ⏰ ${meetTime} | **Roll out @:** ⏳ ${rollTimeFormatted}\n`;
   
   if (ride.startingLocation) {
     const formattedStart = formatLocation(ride.startingLocation);
@@ -232,10 +232,7 @@ function formatRidePost(ride, action = 'created') {
     const formattedEnd = formatLocation(ride.endLocation);
     description += ` | **Ending:** 🐟 ${formattedEnd}`;
   }
-  description += '\n';
-  
-  // Visual separator
-  description += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  description += '\n\n';
   
   // Second section: Vibe, Avg speed, Distance, Route
   const paceText = ride.pace === 'spicy' && ride.avgSpeed 
@@ -257,10 +254,7 @@ function formatRidePost(ride, action = 'created') {
   if (ride.route) {
     description += `\n**Route:** ${ride.route}`;
   }
-  description += '\n';
-  
-  // Visual separator
-  description += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  description += '\n\n';
   
   // Third section: Leader, Sweep
   description += `**Leader:** <@${ride.leader.id}>`;
