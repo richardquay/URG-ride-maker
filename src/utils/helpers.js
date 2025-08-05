@@ -258,9 +258,6 @@ function formatRidePost(ride, action = 'created') {
     .setColor(getRideColor(ride.type))
     .setFooter({ text: `URG Ride Maker • ${action === 'created' ? 'Created' : 'Updated'} ${formattedTime}` });
 
-  // Build description with structured sections
-  let description = '';
-
   // Add fields to embed
   embed.addFields(
     { name: 'Date:', value: `📅 ${dateDisplay}`, inline: false },
@@ -273,33 +270,7 @@ function formatRidePost(ride, action = 'created') {
     { name: 'Route:', value: `🗺️ ${ride.route ? ride.route : 'Not specified'}`, inline: false },
     { name: 'Leader:', value: `🚴‍♂️ <@${ride.leader.id}>`, inline: false },
     { name: 'Sweep:', value: `🚴‍♂️ <@${ride.sweep.id}>`, inline: false },
-  )
-  
-
-  
-  
-  // Second section: Vibe, Avg speed, Distance, Route
-  const paceText = ride.pace === 'spicy' && ride.avgSpeed 
-    ? `${ride.pace} (${ride.avgSpeed} mph)`
-    : ride.pace;
-  
-  // Combine vibe and drop policy
-  const vibeText = `${paceText}, ${ride.dropPolicy}`;
-  description += `**Vibe:** 🎉 ${vibeText}\n`;
-  
-  if (ride.avgSpeed) {
-    description += `**Avg speed:** 🚤 ${ride.avgSpeed} mph`;
-  }
-  
-  if (ride.mileage) {
-    description += ` | **Distance:** 📏 ${ride.mileage} miles`;
-  }
-  
-  if (ride.route) {
-    description += `\n**Route:** ${ride.route}`;
-  }
-
-  
+  )  
   return embed;
 }
 
