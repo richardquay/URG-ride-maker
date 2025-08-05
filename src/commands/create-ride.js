@@ -365,7 +365,7 @@ module.exports = {
             { name: 'Starting Location', value: ride.startingLocation || 'Not specified', inline: true },
             { name: 'End Location', value: ride.endLocation || 'Not specified', inline: true },
             { name: '🆔 Ride ID', value: `\`${ride.id}\``, inline: false },
-            { name: '✏️ Quick Edit', value: `Copy & past the following into the command bar of that discord server: \`/edit-ride ride-id:${ride.id}\` to edit this ride`, inline: false }
+            { name: '✏️ Quick Edit', value: `Copy & past the following into the command bar of the DM: \n \`/edit-ride ride-id:${ride.id}\` \n to edit this ride`, inline: false }
           )
           .setFooter({ text: 'URG RideMaker • Ride Created' });
 

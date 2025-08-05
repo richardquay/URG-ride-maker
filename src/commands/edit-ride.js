@@ -35,7 +35,7 @@ module.exports = {
         return;
       }
 
-            // Check if the ride is in the past (allow editing rides from today or future)
+      // Check if the ride is in the past (allow editing rides from today or future)
       const now = new Date();
       const rideDate = ride.date ? new Date(ride.date) : null;
       
@@ -59,40 +59,29 @@ module.exports = {
         .setDescription(`**Ride**: ${ride.type.toUpperCase()} - ${formatDateWithToday(ride.date, 'short')}`)
         .setColor('#4ecdc4')
         .addFields(
-          { name: 'What would you like to edit?', value: 'Click a button below to edit a specific field.' }
+          { name: 'What would you like to edit?', value: 'Click the link below to edit your ride with dropdown options.' }
         )
         .setFooter({ text: 'URG RideMaker • Edit Ride' });
 
-      // Create buttons for different edit options
-      const editButtons = new ActionRowBuilder()
+      // Create a single edit link button
+      const editButton = new ActionRowBuilder()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId(`edit_ride_${rideId}_date`)
-            .setLabel('📅 Date/Time')
-            .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder()
-            .setCustomId(`edit_ride_${rideId}_location`)
-            .setLabel('📍 Location')
-            .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder()
-            .setCustomId(`edit_ride_${rideId}_details`)
-            .setLabel('📝 Details')
-            .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder()
-            .setCustomId(`edit_ride_${rideId}_cancel`)
-            .setLabel('❌ Cancel')
-            .setStyle(ButtonStyle.Danger)
+            .setCustomId(`edit_ride_${rideId}_options`)
+            .setLabel('🔧 Edit Ride')
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('🔧')
         );
 
       // Send DM to the ride leader
       try {
         await interaction.user.send({
           embeds: [editEmbed],
-          components: [editButtons]
+          components: [editButton]
         });
 
         await interaction.reply({
-          content: '✅ Edit options sent to your DM! Check your private messages.',
+          content: '✅ Edit link sent to your DM! Check your private messages.',
           ephemeral: true
         });
       } catch (dmError) {

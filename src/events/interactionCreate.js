@@ -1,4 +1,4 @@
-const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
+const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder } = require('discord.js');
 const db = require('../utils/database');
 const {
   parseDate,
@@ -6,7 +6,8 @@ const {
   parseMileage,
   validateRouteUrl,
   formatRidePost,
-  validateLocation
+  validateLocation,
+  LOCATIONS
 } = require('../utils/helpers');
 
 module.exports = {
@@ -19,6 +20,17 @@ module.exports = {
       // Check if this is a ride edit button
       if (customId.startsWith('edit_ride_')) {
         await handleRideEditButton(interaction, customId);
+        return;
+      }
+    }
+
+    // Handle select menu interactions for ride editing
+    if (interaction.isStringSelectMenu()) {
+      const customId = interaction.customId;
+      
+      // Check if this is a ride edit select menu
+      if (customId.startsWith('edit_ride_select_')) {
+        await handleRideEditSelect(interaction, customId);
         return;
       }
     }
@@ -42,14 +54,79 @@ async function handleRideEditButton(interaction, customId) {
     const rideId = parts[2];
     const editType = parts[3];
 
-    if (editType === 'cancel') {
-      await interaction.update({
-        content: '❌ Edit cancelled.',
-        embeds: [],
-        components: []
+    // Get the ride to verify ownership
+    const ride = await db.getRide(rideId);
+    if (!ride || ride.leader.id !== interaction.user.id) {
+      await interaction.reply({
+        content: '❌ You can only edit your own rides.',
+        ephemeral: true
       });
       return;
     }
+
+    if (editType === 'options') {
+      // Show edit options with dropdowns
+      await showEditOptions(interaction, rideId, ride);
+    }
+
+  } catch (error) {
+    console.error('Error handling ride edit button:', error);
+    await interaction.reply({
+      content: '❌ An error occurred while processing the edit request.',
+      ephemeral: true
+    });
+  }
+}
+
+async function showEditOptions(interaction, rideId, ride) {
+  // Create edit options embed
+  const editEmbed = new EmbedBuilder()
+    .setTitle('🔧 Edit Ride Options')
+    .setDescription(`**Ride**: ${ride.type.toUpperCase()} - ${ride.date ? ride.date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : 'No date'}`)
+    .setColor('#4ecdc4')
+    .addFields(
+      { name: 'What would you like to edit?', value: 'Select an option from the dropdown below.' }
+    )
+    .setFooter({ text: 'URG RideMaker • Edit Ride' });
+
+  // Create dropdown for edit options
+  const editSelect = new StringSelectMenuBuilder()
+    .setCustomId(`edit_ride_select_${rideId}_type`)
+    .setPlaceholder('Choose what to edit...')
+    .addOptions([
+      {
+        label: '📅 Date & Time',
+        description: 'Edit the ride date, start time, and roll time',
+        value: 'date',
+        emoji: '📅'
+      },
+      {
+        label: '📍 Location',
+        description: 'Edit starting and ending locations',
+        value: 'location',
+        emoji: '📍'
+      },
+      {
+        label: '📝 Details',
+        description: 'Edit mileage, route URL, and average speed',
+        value: 'details',
+        emoji: '📝'
+      }
+    ]);
+
+  const row = new ActionRowBuilder().addComponents(editSelect);
+
+  await interaction.update({
+    embeds: [editEmbed],
+    components: [row]
+  });
+}
+
+async function handleRideEditSelect(interaction, customId) {
+  try {
+    const parts = customId.split('_');
+    const rideId = parts[3];
+    const editType = parts[4];
 
     // Get the ride to verify ownership
     const ride = await db.getRide(rideId);
@@ -61,15 +138,143 @@ async function handleRideEditButton(interaction, customId) {
       return;
     }
 
-    // Create appropriate modal based on edit type
-    const modal = createEditModal(rideId, editType, ride);
-    
-    await interaction.showModal(modal);
+    if (editType === 'type') {
+      const selectedValue = interaction.values[0];
+      
+      if (selectedValue === 'location') {
+        // Show location dropdowns
+        await showLocationEditOptions(interaction, rideId, ride);
+      } else {
+        // Show modal for date/time or details
+        const modal = createEditModal(rideId, selectedValue, ride);
+        await interaction.showModal(modal);
+      }
+    } else if (editType === 'start_location') {
+      const selectedLocation = interaction.values[0];
+      await handleLocationUpdate(interaction, rideId, ride, 'startingLocation', selectedLocation);
+    } else if (editType === 'end_location') {
+      const selectedLocation = interaction.values[0];
+      await handleLocationUpdate(interaction, rideId, ride, 'endLocation', selectedLocation);
+    }
 
   } catch (error) {
-    console.error('Error handling ride edit button:', error);
+    console.error('Error handling ride edit select:', error);
     await interaction.reply({
       content: '❌ An error occurred while processing the edit request.',
+      ephemeral: true
+    });
+  }
+}
+
+async function showLocationEditOptions(interaction, rideId, ride) {
+  // Create location options embed
+  const locationEmbed = new EmbedBuilder()
+    .setTitle('📍 Edit Ride Locations')
+    .setDescription(`**Ride**: ${ride.type.toUpperCase()} - ${ride.date ? ride.date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : 'No date'}`)
+    .setColor('#4ecdc4')
+    .addFields(
+      { name: 'Current Locations', value: `**Start**: ${ride.startingLocation || 'Not set'}\n**End**: ${ride.endLocation || 'Not set'}` }
+    )
+    .setFooter({ text: 'URG RideMaker • Edit Locations' });
+
+  // Create dropdowns for starting and ending locations
+  const startLocationOptions = Object.entries(LOCATIONS).map(([key, location]) => ({
+    label: location.name,
+    description: `Select ${location.name} as starting location`,
+    value: key,
+    emoji: key === ride.startingLocation ? '✅' : '📍'
+  }));
+
+  const endLocationOptions = [
+    {
+      label: 'No End Location',
+      description: 'Remove end location',
+      value: 'none',
+      emoji: '❌'
+    },
+    ...Object.entries(LOCATIONS).map(([key, location]) => ({
+      label: location.name,
+      description: `Select ${location.name} as ending location`,
+      value: key,
+      emoji: key === ride.endLocation ? '✅' : '📍'
+    }))
+  ];
+
+  const startLocationSelect = new StringSelectMenuBuilder()
+    .setCustomId(`edit_ride_select_${rideId}_start_location`)
+    .setPlaceholder('Choose starting location...')
+    .addOptions(startLocationOptions);
+
+  const endLocationSelect = new StringSelectMenuBuilder()
+    .setCustomId(`edit_ride_select_${rideId}_end_location`)
+    .setPlaceholder('Choose ending location (optional)...')
+    .addOptions(endLocationOptions);
+
+  const row1 = new ActionRowBuilder().addComponents(startLocationSelect);
+  const row2 = new ActionRowBuilder().addComponents(endLocationSelect);
+
+  await interaction.update({
+    embeds: [locationEmbed],
+    components: [row1, row2]
+  });
+}
+
+async function handleLocationUpdate(interaction, rideId, ride, locationType, selectedLocation) {
+  try {
+    let updates = {};
+    
+    if (locationType === 'startingLocation') {
+      updates = {
+        startingLocation: selectedLocation
+      };
+    } else if (locationType === 'endLocation') {
+      updates = {
+        endLocation: selectedLocation === 'none' ? null : selectedLocation
+      };
+    }
+
+    // Update the ride in the database
+    const updatedRide = await db.updateRide(rideId, updates);
+
+    // Update the original message if it exists
+    if (ride.messageId && ride.channelId) {
+      try {
+        const channel = interaction.client.channels.cache.get(ride.channelId);
+        if (channel) {
+          const message = await channel.messages.fetch(ride.messageId);
+          if (message) {
+            const updatedEmbed = formatRidePost(updatedRide, 'updated');
+            await message.edit({ embeds: [updatedEmbed] });
+          }
+        }
+      } catch (messageError) {
+        console.error('Error updating original message:', messageError);
+        // Continue even if message update fails
+      }
+    }
+
+    // Send confirmation to user
+    await interaction.reply({
+      content: `✅ ${locationType === 'startingLocation' ? 'Starting location' : 'End location'} updated successfully!`,
+      ephemeral: true
+    });
+
+    // Update the DM message to show success
+    const successEmbed = new EmbedBuilder()
+      .setTitle('✅ Location Updated Successfully')
+      .setDescription(`Your ${updatedRide.type.toUpperCase()} ride location has been updated.`)
+      .setColor('#4ecdc4')
+      .setFooter({ text: 'URG RideMaker • Edit Complete' });
+
+    await interaction.message.edit({
+      embeds: [successEmbed],
+      components: []
+    });
+
+  } catch (error) {
+    console.error('Error handling location update:', error);
+    await interaction.reply({
+      content: '❌ An error occurred while updating the location.',
       ephemeral: true
     });
   }
@@ -110,25 +315,8 @@ function createEditModal(rideId, editType, ride) {
     modal.addComponents(firstRow, secondRow, thirdRow);
 
   } else if (editType === 'location') {
-    // Location edit modal
-    const startLocationInput = new TextInputBuilder()
-      .setCustomId('start_location_input')
-      .setLabel('Starting Location')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(true)
-      .setValue(ride.startingLocation || '');
-
-    const endLocationInput = new TextInputBuilder()
-      .setCustomId('end_location_input')
-      .setLabel('End Location (optional)')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(false)
-      .setValue(ride.endLocation || '');
-
-    const firstRow = new ActionRowBuilder().addComponents(startLocationInput);
-    const secondRow = new ActionRowBuilder().addComponents(endLocationInput);
-
-    modal.addComponents(firstRow, secondRow);
+    // Location editing is now handled with dropdowns, so this shouldn't be called
+    throw new Error('Location editing should use dropdowns, not modals');
 
   } else if (editType === 'details') {
     // Details edit modal
@@ -198,14 +386,8 @@ async function handleRideEditModal(interaction, customId) {
       };
 
     } else if (editType === 'location') {
-      // Handle location updates
-      const startLocation = interaction.fields.getTextInputValue('start_location_input');
-      const endLocation = interaction.fields.getTextInputValue('end_location_input');
-
-      updates = {
-        startingLocation: validateLocation(startLocation),
-        endLocation: endLocation ? validateLocation(endLocation) : null
-      };
+      // Location updates are now handled with dropdowns
+      throw new Error('Location updates should use dropdowns, not modals');
 
     } else if (editType === 'details') {
       // Handle details updates

@@ -296,7 +296,7 @@ function formatRidePost(ride, action = 'created') {
   if (ride.route) {
     description += `\n**Route:** ${ride.route}`;
   }
-  description += '\n';
+  description += '\n\n';
   
   // Third section: Leader, Sweep
   description += `**Leader:** <@${ride.leader.id}>`;
@@ -304,7 +304,7 @@ function formatRidePost(ride, action = 'created') {
   if (ride.sweep) {
     description += ` | **Sweep:** <@${ride.sweep.id}>`;
   }
-  description += '\n';
+  description += '\n\n';
   embed.setDescription(description);
   
   return embed;
