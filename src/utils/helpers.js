@@ -273,7 +273,7 @@ function formatRidePost(ride, action = 'created') {
   const embed = new EmbedBuilder()
     .setTitle(`🚴‍♂️ ${ride.type.toUpperCase()} RIDE 🚴‍♀️`)
     .setColor(getRideColor(ride.type))
-    .setFooter({ text: `React below to join! • ${actionText} ${formattedTime}` });
+    .setFooter({ text: `**React below to join!** • ${actionText} ${formattedTime}` });
 
   // Build description with all ride details in a single block
   let description = '';
@@ -282,20 +282,20 @@ function formatRidePost(ride, action = 'created') {
   description += `**Date:** ${dateDisplay}\n`;
   
   // Meet and Roll times
-  description += `**Meet @** ${meetTime} \u2003 \u21A3 \u2003 **Roll @** ${rollTimeFormatted}\n`;
+  description += `**Meet** @ ${meetTime} \u2002 **\u21A3** \u2002 **Roll** @ ${rollTimeFormatted}\n`;
   
   // Pace
-  description += `**${ride.pace}** pace, ${ride.dropPolicy}}\n`;
+  description += `**${ride.pace}** pace, **${ride.dropPolicy}}** style ride\n`;
   
   description += '\n';
 
   // Add optional fields if they exist
   if (ride.startingLocation) {
-    description += `**Starting @** ${formatLocation(ride.startingLocation)}`;
+    description += `**Starting** @ ${formatLocation(ride.startingLocation)} \u2003`;
   }
   
   if (ride.endLocation) {
-    description += `**Ending @** ${formatLocation(ride.endLocation)}\n`;
+    description += `**Ending** @ ${formatLocation(ride.endLocation)}\n`;
   }
   
   description += '\n';
