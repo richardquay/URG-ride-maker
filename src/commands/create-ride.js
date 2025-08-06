@@ -26,18 +26,18 @@ module.exports = {
         .setDescription('Type of ride (REQUIRED)')
         .setRequired(true)
         .addChoices(
-          { name: '🛣️ Road', value: 'road' },
-          { name: '🪨 Gravel', value: 'gravel' },
-          { name: '⛰️ Trail', value: 'trail' },
-          { name: '🤡 Social', value: 'social' }
+          { name: '🛣️ Road', value: '🛣️ road' },
+          { name: '🪨 Gravel', value: '🪨 gravel' },
+          { name: '⛰️ Trail', value: '⛰️ trail' },
+          { name: '🤡 Social', value: '🤡 social' }
         ))
     .addStringOption(option =>
       option.setName('pace')
         .setDescription('Ride pace (REQUIRED)')
         .setRequired(true)
         .addChoices(
-          { name: '🌶️ Spicy', value: 'spicy' },
-          { name: '🎉 Party', value: 'party' }
+          { name: '🌶️ Spicy', value: '🌶️ Spicy' },
+          { name: '🎉 Party', value: '🎉 Party' }
         ))
     .addStringOption(option =>
       option.setName('date')

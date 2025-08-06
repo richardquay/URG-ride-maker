@@ -273,7 +273,7 @@ function formatRidePost(ride, action = 'created') {
   const embed = new EmbedBuilder()
     .setTitle(`🚴‍♂️ ${ride.type.toUpperCase()} RIDE 🚴‍♀️`)
     .setColor(getRideColor(ride.type))
-    .setFooter({ text: `**React below to join!** • ${actionText} ${formattedTime}` });
+    .setFooter({ text: `React below to join! • ${actionText} ${formattedTime}` });
 
   // Build description with all ride details in a single block
   let description = '';
@@ -285,7 +285,7 @@ function formatRidePost(ride, action = 'created') {
   description += `**Meet** @ ${meetTime} \u2002 **\u21A3** \u2002 **Roll** @ ${rollTimeFormatted}\n`;
   
   // Pace
-  description += `**${ride.pace}** pace, **${ride.dropPolicy}}** style ride\n`;
+  description += `**${ride.pace}** pace, **${ride.dropPolicy}** style ride\n`;
   
   description += '\n';
 
@@ -311,7 +311,7 @@ function formatRidePost(ride, action = 'created') {
   //description += '\n';
 
   // Lead
-  description += `👑 **Lead:** <@${ride.leader.id}> \u0020\u0020 \u21A3 \u0020\u0020`;
+  description += `👑 **Lead:** <@${ride.leader.id}> u2006`;
 
   // Sweep
   if (ride.sweep) {
