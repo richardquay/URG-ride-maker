@@ -271,15 +271,13 @@ function formatRidePost(ride, action = 'created') {
   let description = '';
   description += '\n\n';
   // Date
-  description += `📅 **Date:** ${dateDisplay}\n 
-  ⏰ **Meet:** ${meetTime}  |  **Roll:** ${rollTimeFormatted}\n
-  🏃 **Pace:** ${ride.pace}, ${ride.dropPolicy}}\n`;
+  description += `📅 \n__Date:__ ${dateDisplay}\n`;
   
   // Meet and Roll times
-  // description += `⏰ **Meet:** ${meetTime}  |  **Roll:** ${rollTimeFormatted}\n`;
+  description += ` \n__**Meet @__ ${meetTime} \U+0020\U+0020 \U+21A3 \U+0020\U+0020 \n__Roll @__ ${rollTimeFormatted}\n`;
   
   // Pace
-  // description += `🏃 **Pace:** ${ride.pace}, ${ride.dropPolicy}}\n`;
+  description += `🏃 \n__Pace:__ ${ride.pace}, ${ride.dropPolicy}}\n`;
   
   description += '\n';
 
@@ -305,7 +303,7 @@ function formatRidePost(ride, action = 'created') {
   //description += '\n';
 
   // Lead
-  description += `👑 **Lead:** <@${ride.leader.id}>\n`;
+  description += `👑 **Lead:** <@${ride.leader.id}> \U+0020\U+0020 \U+21A3 \U+0020\U+0020`;
 
   // Sweep
   if (ride.sweep) {

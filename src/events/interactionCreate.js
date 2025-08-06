@@ -172,7 +172,7 @@ async function handleRideEditButton(interaction, customId) {
       // User is done editing
       const doneEmbed = new EmbedBuilder()
         .setTitle('✅ Editing Complete')
-        .setDescription(`Your ${ride.type.toUpperCase()} ride has been updated successfully!\n\nYou can use \`/edit-ride ride-id:${rideId}\` anytime to make more changes.`)
+        .setDescription(`Your ${ride.type.toUpperCase()}, ${ride.date.toUpperCase()} ${ride.timeString.toUpperCase()} ride has been updated successfully!\n\nYou can use \`/edit-ride ride-id:${rideId}\` anytime to make more changes.`)
         .setColor('#4ecdc4')
         .setFooter({ text: 'URG RideMaker • Edit Complete' });
 
