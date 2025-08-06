@@ -24,7 +24,7 @@ module.exports = {
                  `📊 **Before:** ${beforeCount} cached members\n` +
                  `📊 **After:** ${afterCount} cached members\n` +
                  `🆕 **Newly cached:** ${newMembers} members\n\n` +
-                 `🎯 **Sweep picker should now work!** Try `/create-ride` again.`
+                 `🎯 **Sweep picker should now work!** Try \`/create-ride\` again.`
       });
       
     } catch (error) {
