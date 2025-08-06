@@ -258,23 +258,28 @@ function formatRidePost(ride, action = 'created') {
     hour12: true
   }) : 'Unknown';
   
+  // Determine footer text based on action
+  const actionText = action === 'created' ? 'Created' : 'Last updated';
+  
   // Create embed with the new styling
   const embed = new EmbedBuilder()
     .setTitle(`🚴‍♂️ ${ride.type.toUpperCase()} RIDE 🚴‍♀️`)
     .setColor(getRideColor(ride.type))
-    .setFooter({ text: `URG RideMaker • ${formattedTime}` });
+    .setFooter({ text: `React below to join! • ${actionText} ${formattedTime}` });
 
   // Build description with all ride details in a single block
   let description = '';
   description += '\n\n';
   // Date
-  description += `📅 **Date:** ${dateDisplay}\n`;
+  description += `📅 **Date:** ${dateDisplay}\n 
+  ⏰ **Meet:** ${meetTime}  |  **Roll:** ${rollTimeFormatted}\n
+  🏃 **Pace:** ${ride.pace}, ${ride.dropPolicy}}\n`;
   
   // Meet and Roll times
-  description += `⏰ **Meet:** ${meetTime}  |  **Roll:** ${rollTimeFormatted}\n`;
+  // description += `⏰ **Meet:** ${meetTime}  |  **Roll:** ${rollTimeFormatted}\n`;
   
   // Pace
-  description += `🏃 **Pace:** ${ride.pace}, ${ride.dropPolicy}}\n`;
+  // description += `🏃 **Pace:** ${ride.pace}, ${ride.dropPolicy}}\n`;
   
   description += '\n';
 
@@ -297,7 +302,7 @@ function formatRidePost(ride, action = 'created') {
     description += `🗺️ **Route:** ${ride.route}\n`;
   }
   
-  description += '\n';
+  //description += '\n';
 
   // Lead
   description += `👑 **Lead:** <@${ride.leader.id}>\n`;
@@ -308,7 +313,7 @@ function formatRidePost(ride, action = 'created') {
   }
   
   // Add call to action
-  description += `\n**React below to join!**`;
+ // description += `\n**React below to join!**`;
   
   embed.setDescription(description);
   return embed;
