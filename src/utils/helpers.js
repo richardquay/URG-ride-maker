@@ -261,9 +261,8 @@ function formatRidePost(ride, action = 'created') {
   // Add fields to embed
   const fields = [
     { name: 'Date:', value: `📅 ${dateDisplay}`, inline: true },
-    { name: 'Meet @', value: `⏰ ${meetTime}`, inline: true },
+    { name: 'Meet @', value: `⏰ ${meetTime} /n`, inline: true },
     { name: 'Roll out @', value: `⏳ ${rollTimeFormatted}`, inline: true },
-    { name: '\u200b', value: '\u200b', inline: false }, // Spacer
     { name: 'Vibe:', value: `${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: true },
     { name: 'Starting:', value: `${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: true }
   ];

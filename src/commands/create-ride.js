@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../utils/database');
 const {
   parseDate,
@@ -24,10 +24,10 @@ module.exports = {
         .setDescription('Type of ride (REQUIRED)')
         .setRequired(true)
         .addChoices(
-          { name: 'Road', value: 'road' },
-          { name: 'Gravel', value: 'gravel' },
-          { name: 'Trail', value: 'trail' },
-          { name: 'Social', value: 'social' }
+          { name: '🛣️ Road', value: 'road' },
+          { name: '🪨 Gravel', value: 'gravel' },
+          { name: '⛰️ Trail', value: 'trail' },
+          { name: '🤡 Social', value: 'social' }
         ))
     .addStringOption(option =>
       option.setName('pace')
@@ -364,12 +364,21 @@ module.exports = {
             { name: 'Distance', value: ride.mileage ? `${ride.mileage} miles` : 'Not specified', inline: true },
             { name: 'Starting Location', value: ride.startingLocation || 'Not specified', inline: true },
             { name: 'End Location', value: ride.endLocation || 'Not specified', inline: true },
-            { name: '🆔 Ride ID', value: `\`${ride.id}\``, inline: false },
-            { name: '✏️ Quick Edit', value: `Copy & past the following into the command bar of the DM: \n \`/edit-ride ride-id:${ride.id}\` \n to edit this ride`, inline: false }
+            { name: '🆔 Ride ID', value: `\`${ride.id}\``, inline: false }
           )
           .setFooter({ text: 'URG RideMaker • Ride Created' });
 
-        await interaction.user.send({ embeds: [dmEmbed] });
+        // Create edit button
+        const editButton = new ActionRowBuilder()
+          .addComponents(
+            new ButtonBuilder()
+              .setCustomId(`edit_ride_${ride.id}_options`)
+              .setLabel('✏️ Edit Ride')
+              .setStyle(ButtonStyle.Primary)
+              .setEmoji('✏️')
+          );
+
+        await interaction.user.send({ embeds: [dmEmbed], components: [editButton] });
 
         // Send ephemeral confirmation in channel
         await interaction.reply({
