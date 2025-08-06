@@ -84,7 +84,7 @@ module.exports = {
         }
       );
       
-      await interaction.editReply({ embeds: [statusEmbed] });
+      await interaction.editReply({ embeds: [statusEmbed], ephemeral: true });
       
     } catch (error) {
       console.error('Error in status command:', error);
@@ -98,7 +98,7 @@ module.exports = {
         )
         .setTimestamp();
       
-      await interaction.editReply({ embeds: [errorEmbed] });
+      await interaction.editReply({ embeds: [errorEmbed], ephemeral: true });
     }
   },
 }; 

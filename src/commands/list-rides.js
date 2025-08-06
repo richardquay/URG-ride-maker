@@ -15,12 +15,21 @@ module.exports = {
           { name: 'Gravel', value: 'gravel' },
           { name: 'Trail', value: 'trail' },
           { name: 'Social', value: 'social' }
+        ))
+    .addStringOption(option =>
+      option.setName('filter')
+        .setDescription('Filter rides by your participation')
+        .setRequired(false)
+        .addChoices(
+          { name: 'My Rides (Going/Maybe)', value: 'my_rides' },
+          { name: 'All Rides', value: 'all_rides' }
         )),
 
   async execute(interaction) {
     try {
       const serverId = interaction.guildId;
       const rideType = interaction.options.getString('type');
+      const filterOption = interaction.options.getString('filter') || 'all_rides';
       const currentUserId = interaction.user.id;
       
       // Get active rides
@@ -31,11 +40,38 @@ module.exports = {
         rides = rides.filter(ride => ride.type === rideType);
       }
       
+      // Filter by user participation if specified
+      if (filterOption === 'my_rides') {
+        rides = rides.filter(ride => {
+          // Include rides where user is the leader
+          if (ride.leader && ride.leader.id === currentUserId) {
+            return true;
+          }
+          
+          // Include rides where user is going or maybe
+          if (ride.attendees) {
+            const isGoing = ride.attendees.going && ride.attendees.going.includes(currentUserId);
+            const isMaybe = ride.attendees.maybe && ride.attendees.maybe.includes(currentUserId);
+            return isGoing || isMaybe;
+          }
+          
+          return false;
+        });
+      }
+      
       if (rides.length === 0) {
+        let noRidesMessage = '❌ No active rides found.';
+        if (rideType) {
+          noRidesMessage = `❌ No active ${rideType} rides found.`;
+        }
+        if (filterOption === 'my_rides') {
+          noRidesMessage = rideType 
+            ? `❌ No active ${rideType} rides found that you're participating in.`
+            : '❌ No active rides found that you\'re participating in.';
+        }
+        
         await interaction.reply({
-          content: rideType 
-            ? `❌ No active ${rideType} rides found.`
-            : '❌ No active rides found.',
+          content: noRidesMessage,
           ephemeral: true
         });
         return;
@@ -45,8 +81,9 @@ module.exports = {
       rides.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       // Create embed with ride list
+      const embedTitle = filterOption === 'my_rides' ? '🚴‍♂️ My Active Rides' : '🚴‍♂️ Active Rides';
       const embed = new EmbedBuilder()
-        .setTitle('🚴‍♂️ Active Rides')
+        .setTitle(embedTitle)
         .setColor('#4ecdc4')
         .setFooter({ text: 'URG RideMaker • Use /edit-ride with the Ride ID to edit' });
 
@@ -69,9 +106,6 @@ module.exports = {
         }
         
         description += `**${ride.type.toUpperCase()}** - ${formatDateWithToday(ride.date, 'short')} at ${meetTime}${leaderIndicator}${attendeeStatus}\n`;
-        description += `**Ride ID**: \`${ride.id}\`\n`;
-        description += `**Leader**: <@${ride.leader.id}>\n`;
-        
         if (ride.startingLocation) {
           description += `**Start**: ${ride.startingLocation}\n`;
         }
@@ -80,7 +114,7 @@ module.exports = {
           description += `**Distance**: ${ride.mileage} miles\n`;
         }
         
-        description += '\n';
+        description += '\n\n';
       }
 
       embed.setDescription(description);
@@ -100,7 +134,7 @@ module.exports = {
           
           const button = new ButtonBuilder()
             .setCustomId(`view_ride_${ride.id}`)
-            .setLabel(`${ride.type.toUpperCase()} ${shortDate}`)
+            .setLabel(`${ride.type.toUpperCase()} ${shortDate}, ${ride.meetTime.hours}:${ride.meetTime.minutes}`)
             .setStyle(ButtonStyle.Primary)
             .setEmoji('🚴‍♂️');
           

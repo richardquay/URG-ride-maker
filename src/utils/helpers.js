@@ -252,50 +252,59 @@ function formatRidePost(ride, action = 'created') {
     hour12: true
   }) : 'Unknown';
   
-  // Create embed
+  // Create embed with the new styling
   const embed = new EmbedBuilder()
-    .setTitle(`New ${ride.type.charAt(0).toUpperCase() + ride.type.slice(1)} Ride 🚴🚴‍♀️`)
+    .setTitle(`🚴‍♂️ ${ride.type.toUpperCase()} RIDE 🚴‍♀️`)
     .setColor(getRideColor(ride.type))
-    .setFooter({ text: `URG Ride Maker • ${action === 'created' ? 'Created' : 'Updated'} ${formattedTime}` });
+    .setFooter({ text: `URG RideMaker • ${formattedTime}` });
 
-  // Add fields to embed
-  const fields = [
-    { name: 'Date:', value: `📅 ${dateDisplay}`, inline: true },
-    { name: 'Meet @', value: `⏰ ${meetTime} /n`, inline: true },
-    { name: 'Roll out @', value: `⏳ ${rollTimeFormatted}`, inline: true },
-    { name: 'Vibe:', value: `${ride.pace === 'spicy' && ride.avgSpeed ? `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace}, ${ride.dropPolicy}`, inline: true },
-    { name: 'Starting:', value: `${ride.startingLocation ? formatLocation(ride.startingLocation) : 'Not specified'}`, inline: true }
-  ];
+  // Build description with all ride details in a single block
+  let description = '';
+  description += '\n\n';
+  // Date
+  description += `📅 **Date:** ${dateDisplay}\n`;
+  
+  // Meet and Roll times
+  description += `⏰ **Meet:** ${meetTime}  |  **Roll:** ${rollTimeFormatted}\n`;
+  
+  // Pace
+  description += `🏃 **Pace:** ${ride.pace}, ${ride.dropPolicy}}\n`;
+  
+  description += '\n';
 
-  // Only add ending location if specified
-  if (ride.endLocation) {
-    fields.push({ name: 'Ending:', value: `${formatLocation(ride.endLocation)}`, inline: true });
+  // Add optional fields if they exist
+  if (ride.startingLocation) {
+    description += `📍 **Start:** ${formatLocation(ride.startingLocation)}\n`;
   }
-
-  // Add spacer if we have ending location
+  
   if (ride.endLocation) {
-    fields.push({ name: '\u200b', value: '\u200b', inline: false }); // Spacer
+    description += `🏁 **End:** ${formatLocation(ride.endLocation)}\n`;
   }
+  
+  description += '\n';
 
-  // Only add distance if specified
   if (ride.mileage) {
-    fields.push({ name: 'Distance:', value: `📏 ${ride.mileage} miles`, inline: true });
+    description += `📏 **Distance:** ${ride.mileage} miles\n`;
   }
-
-  // Only add route if specified
+  
   if (ride.route) {
-    fields.push({ name: 'Route:', value: `🗺️ ${ride.route}`, inline: true });
+    description += `🗺️ **Route:** ${ride.route}\n`;
   }
+  
+  description += '\n';
 
-  // Add leader field
-  fields.push({ name: 'Leader:', value: `🚴‍♂️ <@${ride.leader.id}>`, inline: true });
+  // Lead
+  description += `👑 **Lead:** <@${ride.leader.id}>\n`;
 
-  // Only add sweep field if sweep is assigned
+  // Sweep
   if (ride.sweep) {
-    fields.push({ name: 'Sweep:', value: `🚴‍♂️ <@${ride.sweep.id}>`, inline: true });
+    description += `🚴‍♂️ **Sweep:** <@${ride.sweep.id}>\n`;
   }
-
-  embed.addFields(...fields);  
+  
+  // Add call to action
+  description += `\n**React below to join!**`;
+  
+  embed.setDescription(description);
   return embed;
 }
 
