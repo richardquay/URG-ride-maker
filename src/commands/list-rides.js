@@ -118,8 +118,10 @@ module.exports = {
 
     } catch (error) {
       console.error('Error listing rides:', error);
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
       await interaction.reply({
-        content: '❌ An error occurred while listing rides. Please check the database connection.',
+        content: `❌ An error occurred while listing rides: ${error.message}`,
         ephemeral: true
       });
     }

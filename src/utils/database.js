@@ -149,24 +149,39 @@ class DatabaseManager {
 
   async getActiveRides(serverId) {
     try {
-      // Get today's date at midnight for comparison using Firestore Timestamp
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayTimestamp = admin.firestore.Timestamp.fromDate(today);
+      console.log('Getting active rides for serverId:', serverId);
       
+      // First, try to get all rides for this server
       const snapshot = await this.getDb()
         .collection('rides')
         .where('serverId', '==', serverId)
-        .where('date', '>=', todayTimestamp)
-        .orderBy('date', 'asc')
         .get();
 
-      return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return { id: doc.id, ...convertTimestamps(data) };
-      });
+      console.log('Found', snapshot.docs.length, 'total rides for server');
+      
+      // Filter by date in JavaScript instead of Firestore query
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const activeRides = snapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          return { id: doc.id, ...convertTimestamps(data) };
+        })
+        .filter(ride => {
+          if (!ride.date) return false;
+          const rideDate = new Date(ride.date);
+          return rideDate >= today;
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      console.log('Found', activeRides.length, 'active rides');
+      return activeRides;
+      
     } catch (error) {
       console.error('Error getting active rides:', error);
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
       throw error;
     }
   }
