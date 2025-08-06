@@ -250,13 +250,21 @@ function formatRidePost(ride, action = 'created') {
   
   // Format timestamp for footer
   const timestamp = action === 'created' ? ride.createdAt : ride.updatedAt;
-  const formattedTime = timestamp ? timestamp.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  }) : 'Unknown';
+  let formattedTime = 'Unknown';
+  
+  if (timestamp) {
+    // Handle Firestore Timestamp objects
+    const dateObj = typeof timestamp.toDate === 'function' ? timestamp.toDate() : timestamp;
+    if (dateObj instanceof Date) {
+      formattedTime = dateObj.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+  }
   
   // Determine footer text based on action
   const actionText = action === 'created' ? 'Created' : 'Last updated';
@@ -271,23 +279,23 @@ function formatRidePost(ride, action = 'created') {
   let description = '';
   description += '\n\n';
   // Date
-  description += `📅 __Date:__ ${dateDisplay}\n`;
+  description += `**Date:** ${dateDisplay}\n`;
   
   // Meet and Roll times
-  description += ` __Meet @__ ${meetTime} \u0020\u0020 \u21A3 \u0020\u0020 __Roll @__ ${rollTimeFormatted}\n`;
+  description += `**Meet @** ${meetTime} \u2003 \u21A3 \u2003 **Roll @** ${rollTimeFormatted}\n`;
   
   // Pace
-  description += `🏃 __Pace:__ ${ride.pace}, ${ride.dropPolicy}}\n`;
+  description += `**${ride.pace}** pace, ${ride.dropPolicy}}\n`;
   
   description += '\n';
 
   // Add optional fields if they exist
   if (ride.startingLocation) {
-    description += `📍 **Start:** ${formatLocation(ride.startingLocation)}\n`;
+    description += `**Starting @** ${formatLocation(ride.startingLocation)}`;
   }
   
   if (ride.endLocation) {
-    description += `🏁 **End:** ${formatLocation(ride.endLocation)}\n`;
+    description += `**Ending @** ${formatLocation(ride.endLocation)}\n`;
   }
   
   description += '\n';
