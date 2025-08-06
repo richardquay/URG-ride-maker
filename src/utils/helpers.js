@@ -379,7 +379,7 @@ function validatePace(pace) {
 
 // Validate drop policy
 function validateDropPolicy(policy) {
-  const validPolicies = ['drop', 'no-drop'];
+  const validPolicies = ['drop', 'no-drop', 'regroup'];
   if (!validPolicies.includes(policy.toLowerCase())) {
     throw new Error(`Invalid drop policy. Must be one of: ${validPolicies.join(', ')}`);
   }
