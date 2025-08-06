@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../utils/database');
-const { formatRidePost, formatDateWithToday } = require('../utils/helpers');
+const { formatRidePost, formatDateWithToday, parseRideDate } = require('../utils/helpers');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -37,7 +37,7 @@ module.exports = {
 
       // Check if the ride is in the past (allow editing rides from today or future)
       const now = new Date();
-      const rideDate = ride.date ? new Date(ride.date) : null;
+      const rideDate = parseRideDate(ride.date);
       
       if (rideDate) {
         const rideDateOnly = new Date(rideDate.getFullYear(), rideDate.getMonth(), rideDate.getDate());

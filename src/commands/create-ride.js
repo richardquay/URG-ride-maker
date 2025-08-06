@@ -7,12 +7,14 @@ const {
   validateRouteUrl,
   formatRidePost,
   formatDateWithToday,
+  formatTime,
   getReactionEmoji,
   validateRideType,
   validatePace,
   validateDropPolicy,
   getDefaultStartingLocation,
-  validateLocation
+  validateLocation,
+  parseRideDate
 } = require('../utils/helpers');
 
 module.exports = {
@@ -347,9 +349,11 @@ module.exports = {
       // Send confirmation DM to user with ride details
       try {
         // Calculate roll time
-        const rollTime = new Date(ride.date);
+        const rideDate = parseRideDate(ride.date) || new Date();
+        
+        const rollTime = new Date(rideDate);
         rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + (ride.rollTime || 0));
-        const rollTimeFormatted = `${rollTime.getHours().toString().padStart(2, '0')}:${rollTime.getMinutes().toString().padStart(2, '0')}`;
+        const rollTimeFormatted = formatTime(rollTime.getHours(), rollTime.getMinutes());
 
         const dmEmbed = new EmbedBuilder()
           .setTitle('✅ Ride Created Successfully!')
@@ -357,7 +361,7 @@ module.exports = {
           .setDescription(`Your **${ride.type.toUpperCase()}** ride has been posted to ${channel}`)
           .addFields(
             { name: 'Date', value: formatDateWithToday(ride.date, 'long'), inline: true },
-            { name: 'Meet Time', value: `${ride.meetTime.hours.toString().padStart(2, '0')}:${ride.meetTime.minutes.toString().padStart(2, '0')}`, inline: true },
+            { name: 'Meet Time', value: formatTime(ride.meetTime.hours, ride.meetTime.minutes), inline: true },
             { name: 'Roll Time', value: rollTimeFormatted, inline: true },
             { name: 'Pace', value: ride.pace.charAt(0).toUpperCase() + ride.pace.slice(1), inline: true },
             { name: 'Drop Policy', value: ride.dropPolicy === 'drop' ? 'Drop' : 'No Drop', inline: true },

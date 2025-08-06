@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getFirestore, testDatabaseConnection } = require('../config/firebase');
+const { formatTime } = require('../utils/helpers');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -74,7 +75,7 @@ module.exports = {
         },
         { 
           name: '📅 Last Check', 
-          value: new Date().toLocaleTimeString(), 
+          value: formatTime(new Date().getHours(), new Date().getMinutes()), 
           inline: true 
         },
         { 

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../utils/database');
-const { formatTime, formatDateWithToday } = require('../utils/helpers');
+const { formatTime, formatDateWithToday, parseRideDate } = require('../utils/helpers');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -60,14 +60,14 @@ module.exports = {
       }
       
       if (rides.length === 0) {
-        let noRidesMessage = '❌ No active rides found.';
+        let noRidesMessage = '😥 No active rides found.';
         if (rideType) {
-          noRidesMessage = `❌ No active ${rideType} rides found.`;
+          noRidesMessage = `😥 No active ${rideType} rides found.`;
         }
         if (filterOption === 'my_rides') {
           noRidesMessage = rideType 
-            ? `❌ No active ${rideType} rides found that you're participating in.`
-            : '❌ No active rides found that you\'re participating in.';
+            ? `😥 No active ${rideType} rides found that you're participating in.`
+            : '😥 No active rides found that you\'re participating in.';
         }
         
         await interaction.reply({
@@ -78,7 +78,11 @@ module.exports = {
       }
 
       // Sort rides by date
-      rides.sort((a, b) => new Date(a.date) - new Date(b.date));
+      rides.sort((a, b) => {
+        const dateA = parseRideDate(a.date) || new Date(0);
+        const dateB = parseRideDate(b.date) || new Date(0);
+        return dateA - dateB;
+      });
 
       // Create embed with ride list
       const embedTitle = filterOption === 'my_rides' ? '🚴‍♂️ My Active Rides' : '🚴‍♂️ Active Rides';
@@ -90,7 +94,6 @@ module.exports = {
       let description = '';
       
       for (const ride of rides) {
-        const date = new Date(ride.date);
         const meetTime = formatTime(ride.meetTime.hours, ride.meetTime.minutes);
         const isLeader = ride.leader.id === currentUserId;
         const leaderIndicator = isLeader ? ' 👑' : '';
@@ -129,7 +132,7 @@ module.exports = {
         
         rideBatch.forEach((ride, index) => {
           const rideIndex = i + index;
-          const date = new Date(ride.date);
+          const date = parseRideDate(ride.date) || new Date();
           const shortDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           
           const button = new ButtonBuilder()

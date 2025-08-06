@@ -10,6 +10,7 @@ const {
   formatTime,
   formatDateWithToday,
   formatLocation,
+  parseRideDate,
   LOCATIONS
 } = require('../utils/helpers');
 
@@ -42,7 +43,11 @@ module.exports = {
             .setTimestamp();
 
           const meetTime = formatTime(ride.meetTime.hours, ride.meetTime.minutes);
-          const rollTime = new Date(ride.date);
+          
+          // Handle date parsing for roll time calculation
+          const rideDate = parseRideDate(ride.date) || new Date();
+          
+          const rollTime = new Date(rideDate);
           rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + (ride.rollTime || 0));
           const rollTimeFormatted = formatTime(rollTime.getHours(), rollTime.getMinutes());
 

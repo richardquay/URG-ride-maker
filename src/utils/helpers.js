@@ -165,8 +165,10 @@ function formatTime(hours, minutes) {
 function formatDateWithToday(date, format = 'short') {
   if (!date) return 'Date not set';
   
+  const rideDate = parseRideDate(date);
+  if (!rideDate) return 'Invalid Date';
+  
   const today = new Date();
-  const rideDate = new Date(date);
   
   // Check if the ride is today
   const isToday = rideDate.getFullYear() === today.getFullYear() &&
@@ -235,7 +237,11 @@ function validateRouteUrl(url) {
 // Format ride post message
 function formatRidePost(ride, action = 'created') {
   const meetTime = formatTime(ride.meetTime.hours, ride.meetTime.minutes);
-  const rollTime = new Date(ride.date);
+  
+  // Handle date parsing for roll time calculation
+  const rideDate = parseRideDate(ride.date) || new Date();
+  
+  const rollTime = new Date(rideDate);
   rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + (ride.rollTime || 0));
   const rollTimeFormatted = formatTime(rollTime.getHours(), rollTime.getMinutes());
   
@@ -355,6 +361,40 @@ function validateDropPolicy(policy) {
   return policy.toLowerCase();
 }
 
+// Helper function to parse ride dates from various formats
+function parseRideDate(date) {
+  if (!date) return null;
+  
+  if (date instanceof Date) {
+    return date;
+  } else if (typeof date === 'string') {
+    const parsedDate = new Date(date);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+    
+    // Handle the specific format from your database
+    // "October 10, 2025 at 7:00:00 PM UTC-5"
+    const dateMatch = date.match(/(\w+)\s+(\d+),\s+(\d+)\s+at\s+(\d+):(\d+):(\d+)\s+(AM|PM)\s+(UTC[+-]\d+)/);
+    if (dateMatch) {
+      const [, month, day, year, hour, minute, second, period, timezone] = dateMatch;
+      const monthIndex = new Date(`${month} 1, 2000`).getMonth();
+      let hour24 = parseInt(hour);
+      if (period === 'PM' && hour24 !== 12) hour24 += 12;
+      if (period === 'AM' && hour24 === 12) hour24 = 0;
+      
+      return new Date(parseInt(year), monthIndex, parseInt(day), hour24, parseInt(minute), parseInt(second));
+    }
+    
+    return null; // Invalid date
+  } else if (date && typeof date.toDate === 'function') {
+    // Handle Firestore Timestamp objects
+    return date.toDate();
+  }
+  
+  return null; // Invalid date
+}
+
 module.exports = {
   parseDate,
   parseTime,
@@ -370,5 +410,6 @@ module.exports = {
   getDefaultStartingLocation,
   validateLocation,
   formatLocation,
+  parseRideDate,
   LOCATIONS
 }; 

@@ -1,5 +1,6 @@
 const { getFirestore } = require('../config/firebase');
 const admin = require('firebase-admin');
+const { parseRideDate } = require('./helpers');
 
 // Database utility functions for the ride bot
 
@@ -170,10 +171,15 @@ class DatabaseManager {
         })
         .filter(ride => {
           if (!ride.date) return false;
-          const rideDate = new Date(ride.date);
+          const rideDate = parseRideDate(ride.date);
+          if (!rideDate) return false; // Skip invalid dates
           return rideDate >= today;
         })
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+        .sort((a, b) => {
+          const dateA = parseRideDate(a.date) || new Date(0);
+          const dateB = parseRideDate(b.date) || new Date(0);
+          return dateA - dateB;
+        });
 
       console.log('Found', activeRides.length, 'active rides');
       return activeRides;
