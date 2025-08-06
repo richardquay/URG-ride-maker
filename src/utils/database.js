@@ -1,4 +1,5 @@
 const { getFirestore } = require('../config/firebase');
+const admin = require('firebase-admin');
 
 // Database utility functions for the ride bot
 
@@ -87,15 +88,21 @@ class DatabaseManager {
   // Ride Methods
   async createRide(rideData) {
     try {
+      // Convert date to Firestore Timestamp if it's a Date object
+      const rideDataWithTimestamps = { ...rideData };
+      if (rideDataWithTimestamps.date instanceof Date) {
+        rideDataWithTimestamps.date = admin.firestore.Timestamp.fromDate(rideDataWithTimestamps.date);
+      }
+      
       const ride = {
-        ...rideData,
+        ...rideDataWithTimestamps,
         attendees: {
           going: [],
           maybe: [],
           weather: []
         },
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: admin.firestore.Timestamp.fromDate(new Date()),
+        updatedAt: admin.firestore.Timestamp.fromDate(new Date())
       };
 
       const docRef = await this.getDb().collection('rides').add(ride);
@@ -122,9 +129,15 @@ class DatabaseManager {
 
   async updateRide(rideId, updates) {
     try {
+      // Convert date to Firestore Timestamp if it's a Date object
+      const updateDataWithTimestamps = { ...updates };
+      if (updateDataWithTimestamps.date instanceof Date) {
+        updateDataWithTimestamps.date = admin.firestore.Timestamp.fromDate(updateDataWithTimestamps.date);
+      }
+      
       const updateData = {
-        ...updates,
-        updatedAt: new Date()
+        ...updateDataWithTimestamps,
+        updatedAt: admin.firestore.Timestamp.fromDate(new Date())
       };
       await this.getDb().collection('rides').doc(rideId).update(updateData);
       return await this.getRide(rideId);
@@ -136,10 +149,15 @@ class DatabaseManager {
 
   async getActiveRides(serverId) {
     try {
+      // Get today's date at midnight for comparison using Firestore Timestamp
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayTimestamp = admin.firestore.Timestamp.fromDate(today);
+      
       const snapshot = await this.getDb()
         .collection('rides')
         .where('serverId', '==', serverId)
-        .where('date', '>=', new Date())
+        .where('date', '>=', todayTimestamp)
         .orderBy('date', 'asc')
         .get();
 

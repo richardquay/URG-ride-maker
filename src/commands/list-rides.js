@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../utils/database');
 const { formatTime, formatDateWithToday } = require('../utils/helpers');
 
@@ -21,6 +21,7 @@ module.exports = {
     try {
       const serverId = interaction.guildId;
       const rideType = interaction.options.getString('type');
+      const currentUserId = interaction.user.id;
       
       // Get active rides
       let rides = await db.getActiveRides(serverId);
@@ -54,10 +55,20 @@ module.exports = {
       for (const ride of rides) {
         const date = new Date(ride.date);
         const meetTime = formatTime(ride.meetTime.hours, ride.meetTime.minutes);
-        const isLeader = ride.leader.id === interaction.user.id;
+        const isLeader = ride.leader.id === currentUserId;
         const leaderIndicator = isLeader ? ' 👑' : '';
         
-        description += `**${ride.type.toUpperCase()}** - ${formatDateWithToday(ride.date, 'short')} at ${meetTime}${leaderIndicator}\n`;
+        // Check if user is attending
+        let attendeeStatus = '';
+        if (ride.attendees) {
+          if (ride.attendees.going && ride.attendees.going.includes(currentUserId)) {
+            attendeeStatus = ' ✅ Going';
+          } else if (ride.attendees.maybe && ride.attendees.maybe.includes(currentUserId)) {
+            attendeeStatus = ' 🤔 Maybe';
+          }
+        }
+        
+        description += `**${ride.type.toUpperCase()}** - ${formatDateWithToday(ride.date, 'short')} at ${meetTime}${leaderIndicator}${attendeeStatus}\n`;
         description += `**Ride ID**: \`${ride.id}\`\n`;
         description += `**Leader**: <@${ride.leader.id}>\n`;
         
@@ -74,15 +85,41 @@ module.exports = {
 
       embed.setDescription(description);
 
+      // Create buttons for each ride (max 5 buttons per row, Discord limit)
+      const buttonRows = [];
+      const maxButtonsPerRow = 5;
+      
+      for (let i = 0; i < rides.length; i += maxButtonsPerRow) {
+        const row = new ActionRowBuilder();
+        const rideBatch = rides.slice(i, i + maxButtonsPerRow);
+        
+        rideBatch.forEach((ride, index) => {
+          const rideIndex = i + index;
+          const date = new Date(ride.date);
+          const shortDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          
+          const button = new ButtonBuilder()
+            .setCustomId(`view_ride_${ride.id}`)
+            .setLabel(`${ride.type.toUpperCase()} ${shortDate}`)
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('🚴‍♂️');
+          
+          row.addComponents(button);
+        });
+        
+        buttonRows.push(row);
+      }
+
       await interaction.reply({
         embeds: [embed],
+        components: buttonRows,
         ephemeral: true
       });
 
     } catch (error) {
       console.error('Error listing rides:', error);
       await interaction.reply({
-        content: '❌ An error occurred while listing rides.',
+        content: '❌ An error occurred while listing rides. Please check the database connection.',
         ephemeral: true
       });
     }

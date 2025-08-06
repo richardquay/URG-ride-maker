@@ -158,14 +158,14 @@ module.exports = {
 
         const startingLocationInput = new TextInputBuilder()
           .setCustomId('starting_location_input')
-          .setLabel('Starting Location (leave blank if not "other")')
+          .setLabel('Starting Location (optional)')
           .setStyle(TextInputStyle.Short)
           .setRequired(false)
           .setPlaceholder('Enter custom starting location...');
 
         const endLocationInput = new TextInputBuilder()
           .setCustomId('end_location_input')
-          .setLabel('End Location (leave blank if not "other")')
+          .setLabel('End Location (optional)')
           .setStyle(TextInputStyle.Short)
           .setRequired(false)
           .setPlaceholder('Enter custom end location...');

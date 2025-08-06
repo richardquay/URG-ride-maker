@@ -1,4 +1,4 @@
-const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../utils/database');
 const {
   parseDate,
@@ -7,17 +7,113 @@ const {
   validateRouteUrl,
   formatRidePost,
   validateLocation,
+  formatTime,
+  formatDateWithToday,
+  formatLocation,
   LOCATIONS
 } = require('../utils/helpers');
 
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
-    // Handle button interactions for ride editing
+    // Handle button interactions
     if (interaction.isButton()) {
       const customId = interaction.customId;
       
-      // Check if this is a ride edit button
+      // Handle ride detail view buttons
+      if (customId.startsWith('view_ride_')) {
+        const rideId = customId.replace('view_ride_', '');
+        
+        try {
+          const ride = await db.getRide(rideId);
+          
+          if (!ride) {
+            await interaction.reply({
+              content: '❌ Ride not found.',
+              ephemeral: true
+            });
+            return;
+          }
+
+          // Create detailed ride embed
+          const detailEmbed = new EmbedBuilder()
+            .setTitle(`🚴‍♂️ ${ride.type.toUpperCase()} Ride Details`)
+            .setColor(getRideColor(ride.type))
+            .setTimestamp();
+
+          const meetTime = formatTime(ride.meetTime.hours, ride.meetTime.minutes);
+          const rollTime = new Date(ride.date);
+          rollTime.setHours(ride.meetTime.hours, ride.meetTime.minutes + (ride.rollTime || 0));
+          const rollTimeFormatted = formatTime(rollTime.getHours(), rollTime.getMinutes());
+
+          // Add fields to embed
+          const fields = [
+            { name: '📅 Date', value: formatDateWithToday(ride.date, 'long'), inline: true },
+            { name: '⏰ Meet Time', value: meetTime, inline: true },
+            { name: '⏳ Roll Time', value: rollTimeFormatted, inline: true },
+            { name: '🚴‍♂️ Leader', value: `<@${ride.leader.id}>`, inline: true }
+          ];
+
+          if (ride.sweep) {
+            fields.push({ name: '🚴‍♂️ Sweep', value: `<@${ride.sweep.id}>`, inline: true });
+          }
+
+          if (ride.pace) {
+            const paceText = ride.pace === 'spicy' && ride.avgSpeed ? 
+              `${ride.pace} (${ride.avgSpeed} mph)` : ride.pace;
+            fields.push({ name: '🔥 Pace', value: paceText, inline: true });
+          }
+
+          if (ride.dropPolicy) {
+            fields.push({ name: '📋 Drop Policy', value: ride.dropPolicy, inline: true });
+          }
+
+          if (ride.startingLocation) {
+            fields.push({ name: '📍 Starting Location', value: formatLocation(ride.startingLocation), inline: true });
+          }
+
+          if (ride.endLocation) {
+            fields.push({ name: '🏁 End Location', value: formatLocation(ride.endLocation), inline: true });
+          }
+
+          if (ride.mileage) {
+            fields.push({ name: '📏 Distance', value: `${ride.mileage} miles`, inline: true });
+          }
+
+          if (ride.route) {
+            fields.push({ name: '🗺️ Route', value: ride.route, inline: true });
+          }
+
+          // Add attendees if available
+          if (ride.attendees) {
+            const goingCount = ride.attendees.going ? ride.attendees.going.length : 0;
+            const maybeCount = ride.attendees.maybe ? ride.attendees.maybe.length : 0;
+            
+            fields.push({ 
+              name: '👥 Attendees', 
+              value: `✅ Going: ${goingCount} | 🤔 Maybe: ${maybeCount}`, 
+              inline: false 
+            });
+          }
+
+          detailEmbed.addFields(...fields);
+
+          await interaction.reply({
+            embeds: [detailEmbed],
+            ephemeral: true
+          });
+
+        } catch (error) {
+          console.error('Error showing ride details:', error);
+          await interaction.reply({
+            content: '❌ An error occurred while loading ride details.',
+            ephemeral: true
+          });
+        }
+        return;
+      }
+      
+      // Handle ride edit buttons
       if (customId.startsWith('edit_ride_')) {
         await handleRideEditButton(interaction, customId);
         return;
@@ -67,6 +163,18 @@ async function handleRideEditButton(interaction, customId) {
     if (editType === 'options') {
       // Show edit options with dropdowns
       await showEditOptions(interaction, rideId, ride);
+    } else if (editType === 'done') {
+      // User is done editing
+      const doneEmbed = new EmbedBuilder()
+        .setTitle('✅ Editing Complete')
+        .setDescription(`Your ${ride.type.toUpperCase()} ride has been updated successfully!\n\nYou can use \`/edit-ride ride-id:${rideId}\` anytime to make more changes.`)
+        .setColor('#4ecdc4')
+        .setFooter({ text: 'URG RideMaker • Edit Complete' });
+
+      await interaction.update({
+        embeds: [doneEmbed],
+        components: []
+      });
     }
 
   } catch (error) {
@@ -79,12 +187,19 @@ async function handleRideEditButton(interaction, customId) {
 }
 
 async function showEditOptions(interaction, rideId, ride) {
-  // Create edit options embed
+  // Create edit options embed with current values
   const editEmbed = new EmbedBuilder()
     .setTitle('🔧 Edit Ride Options')
     .setDescription(`**Ride**: ${ride.type.toUpperCase()} - ${ride.date ? ride.date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : 'No date'}`)
     .setColor('#4ecdc4')
     .addFields(
+      { name: 'Current Ride Details', value: 
+        `📅 **Date**: ${ride.date ? ride.date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : 'Not set'}\n` +
+        `⏰ **Time**: ${ride.meetTime ? `${ride.meetTime.hours.toString().padStart(2, '0')}:${ride.meetTime.minutes.toString().padStart(2, '0')}` : 'Not set'}\n` +
+        `📍 **Start**: ${ride.startingLocation || 'Not set'}\n` +
+        `🏁 **End**: ${ride.endLocation || 'Not set'}\n` +
+        `📏 **Distance**: ${ride.mileage ? `${ride.mileage} miles` : 'Not set'}\n` +
+        `🎯 **Pace**: ${ride.pace ? ride.pace.charAt(0).toUpperCase() + ride.pace.slice(1) : 'Not set'}`, inline: false },
       { name: 'What would you like to edit?', value: 'Select an option from the dropdown below.' }
     )
     .setFooter({ text: 'URG RideMaker • Edit Ride' });
@@ -114,11 +229,21 @@ async function showEditOptions(interaction, rideId, ride) {
       }
     ]);
 
-  const row = new ActionRowBuilder().addComponents(editSelect);
+  const editRow = new ActionRowBuilder().addComponents(editSelect);
+  
+  // Add a "Done Editing" button
+  const doneButton = new ActionRowBuilder()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`edit_ride_${rideId}_done`)
+        .setLabel('✅ Done Editing')
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('✅')
+    );
 
   await interaction.update({
     embeds: [editEmbed],
-    components: [row]
+    components: [editRow, doneButton]
   });
 }
 
@@ -212,10 +337,20 @@ async function showLocationEditOptions(interaction, rideId, ride) {
 
   const row1 = new ActionRowBuilder().addComponents(startLocationSelect);
   const row2 = new ActionRowBuilder().addComponents(endLocationSelect);
+  
+  // Add a "Done Editing" button
+  const doneButton = new ActionRowBuilder()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`edit_ride_${rideId}_done`)
+        .setLabel('✅ Done Editing')
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('✅')
+    );
 
   await interaction.update({
     embeds: [locationEmbed],
-    components: [row1, row2]
+    components: [row1, row2, doneButton]
   });
 }
 
@@ -259,16 +394,26 @@ async function handleLocationUpdate(interaction, rideId, ride, locationType, sel
       ephemeral: true
     });
 
-    // Update the DM message to show success
+    // Update the DM message to show success and keep edit options
     const successEmbed = new EmbedBuilder()
       .setTitle('✅ Location Updated Successfully')
-      .setDescription(`Your ${updatedRide.type.toUpperCase()} ride location has been updated.`)
+      .setDescription(`Your ${updatedRide.type.toUpperCase()} ride location has been updated.\n\nYou can continue editing other aspects of your ride below.`)
       .setColor('#4ecdc4')
       .setFooter({ text: 'URG RideMaker • Edit Complete' });
 
+    // Create edit button to allow continued editing
+    const editButton = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId(`edit_ride_${rideId}_options`)
+          .setLabel('✏️ Continue Editing')
+          .setStyle(ButtonStyle.Primary)
+          .setEmoji('✏️')
+      );
+
     await interaction.message.edit({
       embeds: [successEmbed],
-      components: []
+      components: [editButton]
     });
 
   } catch (error) {
@@ -428,16 +573,26 @@ async function handleRideEditModal(interaction, customId) {
       ephemeral: true
     });
 
-    // Update the DM message to show success
+    // Update the DM message to show success and keep edit options
     const successEmbed = new EmbedBuilder()
       .setTitle('✅ Ride Updated Successfully')
-      .setDescription(`Your ${updatedRide.type.toUpperCase()} ride has been updated.`)
+      .setDescription(`Your ${updatedRide.type.toUpperCase()} ride has been updated.\n\nYou can continue editing other aspects of your ride below.`)
       .setColor('#4ecdc4')
       .setFooter({ text: 'URG RideMaker • Edit Complete' });
 
+    // Create edit button to allow continued editing
+    const editButton = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId(`edit_ride_${rideId}_options`)
+          .setLabel('✏️ Continue Editing')
+          .setStyle(ButtonStyle.Primary)
+          .setEmoji('✏️')
+      );
+
     await interaction.message.edit({
       embeds: [successEmbed],
-      components: []
+      components: [editButton]
     });
 
   } catch (error) {
@@ -462,4 +617,15 @@ async function handleRideEditModal(interaction, customId) {
       ephemeral: true
     });
   }
+}
+
+// Helper function to get ride color
+function getRideColor(type) {
+  const colors = {
+    road: '#ff6b6b',      // Red
+    gravel: '#4ecdc4',    // Teal
+    trail: '#45b7d1',     // Blue
+    social: '#96ceb4'     // Green
+  };
+  return colors[type] || '#95a5a6'; // Default gray
 } 
