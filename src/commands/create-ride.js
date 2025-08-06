@@ -363,7 +363,7 @@ module.exports = {
             { name: 'Date', value: formatDateWithToday(ride.date, 'long'), inline: true },
             { name: 'Meet Time', value: formatTime(ride.meetTime.hours, ride.meetTime.minutes), inline: true },
             { name: 'Roll Time', value: rollTimeFormatted, inline: true },
-            { name: 'Pace', value: ride.pace.charAt(0).toUpperCase() + ride.pace.slice(1), inline: true },
+            { name: 'Pace', value: ride.pace.charAt(0).toUpperCase() + ride.pace.substring(1).toLowerCase, inline: true },
             { name: 'Drop Policy', value: ride.dropPolicy === 'drop' ? 'Drop' : 'No Drop', inline: true },
             { name: 'Distance', value: ride.mileage ? `${ride.mileage} miles` : 'Not specified', inline: true },
             { name: 'Starting Location', value: ride.startingLocation || 'Not specified', inline: true },

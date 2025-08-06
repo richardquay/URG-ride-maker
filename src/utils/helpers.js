@@ -9,7 +9,7 @@ const LOCATIONS = {
     url: 'https://maps.app.goo.gl/rrxhyZeaJR5UxfKp6'
   },
   'northern-coffeeworks': {
-    name: '☕Northern Coffeeworks',
+    name: '☕ Northern Coffeeworks',
     url: 'https://maps.app.goo.gl/YjYhaHCDZkeggseT9'
   },
   'venn-brewery': {
@@ -225,13 +225,27 @@ function parseMileage(mileageString) {
 // Validate route URL (Strava or RideWithGPS)
 function validateRouteUrl(url) {
   const validDomains = ['strava.com', 'ridewithgps.com'];
-  const urlObj = new URL(url);
   
-  if (!validDomains.some(domain => urlObj.hostname.includes(domain))) {
-    throw new Error('Route must be a Strava or RideWithGPS URL');
+  // Add protocol if missing
+  let urlToValidate = url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    urlToValidate = 'https://' + url;
   }
   
-  return url;
+  try {
+    const urlObj = new URL(urlToValidate);
+    
+    if (!validDomains.some(domain => urlObj.hostname.includes(domain))) {
+      throw new Error('Route must be a Strava or RideWithGPS URL');
+    }
+    
+    return urlToValidate;
+  } catch (error) {
+    if (error.code === 'ERR_INVALID_URL') {
+      throw new Error('Invalid URL format. Please provide a valid Strava or RideWithGPS URL');
+    }
+    throw error;
+  }
 }
 
 // Format ride post message
@@ -308,14 +322,14 @@ function formatRidePost(ride, action = 'created') {
     description += `🗺️ **Route:** ${ride.route}\n`;
   }
   
-  //description += '\n';
+  description += '\n';
 
   // Lead
-  description += `👑 **Lead:** <@${ride.leader.id}> u2006`;
+  description += `**Lead:** <@${ride.leader.id}>`;
 
   // Sweep
   if (ride.sweep) {
-    description += `🚴‍♂️ **Sweep:** <@${ride.sweep.id}>\n`;
+    description += `\u2006**Sweep:** <@${ride.sweep.id}>\n`;
   }
   
   // Add call to action
