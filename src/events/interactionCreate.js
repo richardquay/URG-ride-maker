@@ -172,7 +172,7 @@ async function handleRideEditButton(interaction, customId) {
       // User is done editing
       const doneEmbed = new EmbedBuilder()
         .setTitle('✅ Editing Complete')
-        .setDescription(`Your ${ride.type.toUpperCase()}, ${ride.date.toUpperCase()} ${ride.timeString.toUpperCase()} ride has been updated successfully!\n\nYou can use \`/edit-ride ride-id:${rideId}\` anytime to make more changes.`)
+        .setDescription(`Your ${ride.type.toUpperCase()} ride has been updated successfully!\n\nYou can use \`/edit-ride ride-id:${rideId}\` anytime to make more changes.`)
         .setColor('#4ecdc4')
         .setFooter({ text: 'URG RideMaker • Edit Complete' });
 
@@ -184,10 +184,19 @@ async function handleRideEditButton(interaction, customId) {
 
   } catch (error) {
     console.error('Error handling ride edit button:', error);
-    await interaction.reply({
-      content: '❌ An error occurred while processing the edit request.',
-      ephemeral: true
-    });
+    
+    // Check if we've already replied to avoid the "already acknowledged" error
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: '❌ An error occurred while processing the edit request.',
+        ephemeral: true
+      });
+    } else {
+      await interaction.followUp({
+        content: '❌ An error occurred while processing the edit request.',
+        ephemeral: true
+      });
+    }
   }
 }
 
@@ -289,10 +298,19 @@ async function handleRideEditSelect(interaction, customId) {
 
   } catch (error) {
     console.error('Error handling ride edit select:', error);
-    await interaction.reply({
-      content: '❌ An error occurred while processing the edit request.',
-      ephemeral: true
-    });
+    
+    // Check if we've already replied to avoid the "already acknowledged" error
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: '❌ An error occurred while processing the edit request.',
+        ephemeral: true
+      });
+    } else {
+      await interaction.followUp({
+        content: '❌ An error occurred while processing the edit request.',
+        ephemeral: true
+      });
+    }
   }
 }
 
@@ -423,10 +441,19 @@ async function handleLocationUpdate(interaction, rideId, ride, locationType, sel
 
   } catch (error) {
     console.error('Error handling location update:', error);
-    await interaction.reply({
-      content: '❌ An error occurred while updating the location.',
-      ephemeral: true
-    });
+    
+    // Check if we've already replied to avoid the "already acknowledged" error
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: '❌ An error occurred while updating the location.',
+        ephemeral: true
+      });
+    } else {
+      await interaction.followUp({
+        content: '❌ An error occurred while updating the location.',
+        ephemeral: true
+      });
+    }
   }
 }
 
@@ -617,10 +644,18 @@ async function handleRideEditModal(interaction, customId) {
       errorMessage = '❌ Invalid location provided.';
     }
 
-    await interaction.reply({
-      content: errorMessage,
-      ephemeral: true
-    });
+    // Check if we've already replied to avoid the "already acknowledged" error
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: errorMessage,
+        ephemeral: true
+      });
+    } else {
+      await interaction.followUp({
+        content: errorMessage,
+        ephemeral: true
+      });
+    }
   }
 }
 
