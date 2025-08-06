@@ -105,18 +105,8 @@ client.on(Events.InteractionCreate, async interaction => {
     try {
       await command.execute(interaction);
     } catch (error) {
-      console.error(error);
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ 
-          content: 'There was an error while executing this command!', 
-          ephemeral: true 
-        });
-      } else {
-        await interaction.reply({ 
-          content: 'There was an error while executing this command!', 
-          ephemeral: true 
-        });
-      }
+      console.error('Command execution error:', error);
+      // Let the command handle its own error responses
     }
   }
   
@@ -129,17 +119,7 @@ client.on(Events.InteractionCreate, async interaction => {
         await event.execute(interaction);
       } catch (error) {
         console.error('Error handling interaction:', error);
-        if (interaction.replied || interaction.deferred) {
-          await interaction.followUp({ 
-            content: 'There was an error while processing your input!', 
-            ephemeral: true 
-          });
-        } else {
-          await interaction.reply({ 
-            content: 'There was an error while processing your input!', 
-            ephemeral: true 
-          });
-        }
+        // Let the event handler manage its own error responses
       }
     }
   }
