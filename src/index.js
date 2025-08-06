@@ -76,6 +76,17 @@ server.listen(PORT, () => {
 client.once(Events.ClientReady, async () => {
   console.log(`✅ Bot is ready! Logged in as ${client.user.tag}`);
   
+  // Cache members for all guilds the bot is in
+  console.log('🔄 Caching server members...');
+  for (const guild of client.guilds.cache.values()) {
+    try {
+      await guild.members.fetch();
+      console.log(`✅ Cached ${guild.members.cache.size} members for ${guild.name}`);
+    } catch (error) {
+      console.log(`⚠️ Could not cache members for ${guild.name}: ${error.message}`);
+    }
+  }
+  
   // Initialize Firebase
   try {
     initializeFirebase();
